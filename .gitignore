@@ -1,0 +1,12 @@
+*.qpc_hash
+*.sln
+*.db*
+*.vcxproj
+*.vcxproj.*
+*.opendb
+*.ipch
+*.suo
+
+.vs/*
+obj/*
+out/*

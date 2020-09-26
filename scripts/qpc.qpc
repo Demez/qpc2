@@ -1,0 +1,29 @@
+// ---------------------------------------------------------------
+// Project Script for Quiver Project Creator C++
+// ---------------------------------------------------------------
+
+// i probably need to split this into a dll, idk
+	
+macro PROJECT_NAME "Quiver Project Creator"
+macro OUT_NAME "qpc_launcher"
+
+include "base/core.qpc"
+
+config
+{
+	general
+	{
+		// intentionally different
+		out_name "qpc"
+		config_type "application"
+	}
+	
+}
+
+
+files
+{
+	"../src/*.cpp"
+	"../src/*.h"
+}
+

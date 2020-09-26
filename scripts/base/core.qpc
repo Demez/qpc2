@@ -1,0 +1,44 @@
+// ---------------------------------------------------------------
+// Base Project Script for All QPC Projects
+// ---------------------------------------------------------------
+
+macro PLAT_DIR "win"        [$WINDOWS$]
+macro PLAT_DIR "linux"      [$LINUX$]
+
+macro OUT_NAME  "$PROJECT_SCRIPT_NAME$"                 [!$OUT_NAME$]
+macro OUT_DIR   "$ROOT_DIR$/out/$PLAT_DIR$"             [!$OUT_DIR$]
+macro BUILD_DIR "$ROOT_DIR$/obj/$OUT_NAME$/$CONFIG$"    [!$BUILD_DIR$]
+
+include "$SCRIPT_DIR$/msvc.qpc" [$WINDOWS$]
+
+config
+{
+	general
+	{
+		out_name "$OUT_NAME$"
+		out_dir "$OUT_DIR$"
+		build_dir "$BUILD_DIR$"
+		
+		language "cpp"
+		config_type "dynamic_lib"
+	}
+	
+	compile
+	{
+		inc_dirs
+		{
+			"$ROOT_DIR$/src"
+			"$ROOT_DIR$/inc"
+		}
+	}
+}
+
+files
+{
+	folder "Includes"
+	{
+		"$ROOT_DIR$/inc/*.cpp"
+		"$ROOT_DIR$/inc/*.h"
+	}
+}
+

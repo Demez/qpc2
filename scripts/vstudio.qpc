@@ -1,0 +1,14 @@
+// ---------------------------------------------------------------
+// Project Script for Quiver Project Creator C++
+// ---------------------------------------------------------------
+
+macro PROJECT_NAME "Gen - Visual Studio"
+macro OUT_NAME "vstudio"
+
+include "base/core.qpc"
+
+files
+{
+	"../src/gen/vstudio.cpp"
+}
+
