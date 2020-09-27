@@ -102,6 +102,8 @@ auto main(int argc, const char** argv) -> int
 
 		if (ShouldBuildProject(info))
 		{
+			printf("\nParsing Project: \"%s\"\n", info->m_name.c_str());
+
 			ProjectContainer* proj = ParseProject(builder, info);
 
 			if (GetArgs().force)
