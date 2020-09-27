@@ -71,6 +71,8 @@ enum class Platform
 };
 
 
+size_t              str_count(std::string string, std::string item);
+
 Platform            StrToPlatform(std::string &plat);
 Arch                StrToArch(std::string &plat);
 
@@ -84,10 +86,14 @@ std::string         GetCurrentDir();
 int                 ChangeDir(std::string &path);
 int                 CreateDir(std::string &path);
 bool                FileExists(std::string &path);
+bool                DirExists(std::string &path);
+bool                ItemExists(std::string &path);
 
 void                ReplaceString(std::string& str, const std::string& from, const std::string& to);
 void                GetLongestString(std::vector<std::string> &strVec, std::string &longest);
+void                GetLongestString(StringMap &strMap, std::string &longest);
 std::string         GetLongestString(std::vector<std::string> &strVec);
+std::string         GetLongestString(StringMap &strMap);
 
 bool                CheckExtSource(std::string& ext);
 bool                CheckExtHeader(std::string& ext);

@@ -1,6 +1,7 @@
 #include "util.h"
 #include "args.h"
 #include <map>
+#include <io.h>
 
 #ifdef _WIN32
 #include <direct.h>
@@ -10,6 +11,20 @@
 
 
 const char* g_hashDir = "hashes";
+
+
+size_t str_count(std::string string, std::string item)
+{
+	size_t count = 0;
+
+	while (string.find(item) != std::string::npos)
+	{
+		string = string.substr(string.find(item) + 1);
+		count++;
+	}
+
+	return count;
+}
 
 
 void PlatformItem::AddPlatform(Platform platform)
@@ -75,12 +90,30 @@ void GetLongestString(std::vector<std::string> &strVec, std::string &longest)
 	}
 }
 
+void GetLongestString(StringMap &strMap, std::string &longest)
+{
+	longest = "";
+	for (auto const&[key, value]: strMap)
+	{
+		if (key.length() > longest.length())
+			longest = key;
+	}
+}
+
 std::string GetLongestString(std::vector<std::string> &strVec)
 {
 	std::string longest;
 	GetLongestString(strVec, longest);
 	return longest;
 }
+
+std::string GetLongestString(StringMap &strMap)
+{
+	std::string longest;
+	GetLongestString(strMap, longest);
+	return longest;
+}
+
 
 int ChangeDir(std::string &path)
 {
@@ -109,8 +142,17 @@ std::string GetCurrentDir()
 
 bool FileExists(std::string &path)
 {
-	struct stat buffer;   
-	return (stat (path.c_str(), &buffer) == 0); 
+	return fs::is_regular_file(path);
+}
+
+bool DirExists(std::string &path)
+{
+	return fs::is_directory(path);
+}
+
+bool ItemExists(std::string &path)
+{
+	return (access(path.c_str(), 0) != -1);
 }
 
 
