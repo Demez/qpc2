@@ -142,8 +142,15 @@ void ProjectBuilder::Manager_ParseGroup(QPCBlock *block, Platform plat, ProjectG
 			// are we adding a project by it's path in a group?
 			if (FileExists(item->m_key))
 			{
-				// TODO: remove the file extension
-				name = fs::path(item->m_key).filename().string(); 
+				fs::path fspath = fs::path(item->m_key).filename();
+				name = fspath.string(); 
+
+				if (fspath.has_extension())
+				{
+					// remove the file extension
+					name = name.substr(0, name.length() - fspath.extension().string().length()); 
+				}
+
 				path = item->m_key;
 			}
 
