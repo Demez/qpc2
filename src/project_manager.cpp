@@ -41,7 +41,7 @@ ProjectInfo* ProjectManager::CreateProject(std::string name, std::string path)
 	// check if this is added already
 	for (ProjectInfo* info: m_projects)
 	{
-		if (info->m_path == path)
+		if (!path.empty() && info->m_path == path)
 			return info;
 
 		if (info->m_name == name)
