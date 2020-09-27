@@ -5,7 +5,6 @@
 #include "project_manager.h"
 #include "conditions.h"
 #include "lexer.h"
-#include <vector>
 
 
 // this probably doesn't need to be a class

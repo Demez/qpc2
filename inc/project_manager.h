@@ -14,7 +14,6 @@ enum class ProjManError
 };
 
 
-
 class ProjectInfo: public PlatformItem
 {
 public:
@@ -84,11 +83,6 @@ public:
 };
 
 
-// used to be BaseInfoPlatform
-// ...but naming this ProjectManagerPlatform looks really dumb (along with the original)
-// so im not sure how i would do this
-// adding a "platform" std::vector on Projects and Groups would be fine tbh
-// ...but how would i handle macros?
 class ProjectManager
 {
 public:
