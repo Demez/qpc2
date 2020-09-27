@@ -4,15 +4,9 @@
 #include "project_manager.h"
 
 
-ProjectManagerItem::ProjectManagerItem(std::string name)
+ProjectInfo::ProjectInfo(std::string name)
 {
 	m_name = name;
-}
-
-
-ProjectInfo::ProjectInfo(std::string name):
-	ProjectManagerItem(name)
-{
 }
 
 
@@ -28,15 +22,14 @@ ProjManError ProjectInfo::AddDependency(ProjectInfo* proj)
 }
 
 
-ProjectGroup::ProjectGroup(std::string name):
-	ProjectManagerItem(name)
+ProjectGroup::ProjectGroup(std::string name)
 {
+	m_name = name;
 }
 
 
-ProjectManagerItem::ProjectManagerItem() {}
-ProjectInfo::ProjectInfo(): ProjectManagerItem() {}
-ProjectGroup::ProjectGroup(): ProjectManagerItem() {}
+ProjectInfo::ProjectInfo() {}
+ProjectGroup::ProjectGroup() {}
 
 
 ProjectInfo* ProjectManager::CreateProject(std::string name, std::string path)

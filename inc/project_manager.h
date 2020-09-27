@@ -14,18 +14,8 @@ enum class ProjManError
 };
 
 
-// ok i probably don't need this tbh
-class ProjectManagerItem: public PlatformItem
-{
-public:
-	ProjectManagerItem(std::string name);
-	ProjectManagerItem();
 
-	std::string m_name;
-};
-
-
-class ProjectInfo: public ProjectManagerItem
+class ProjectInfo: public PlatformItem
 {
 public:
 	ProjectInfo(std::string name);
@@ -58,6 +48,7 @@ public:
 		return (m_deps < other.m_deps);
 	}
 
+	std::string m_name;
 	std::string m_path;
 	std::vector<ProjectInfo*> m_deps;
 
@@ -66,7 +57,7 @@ public:
 };
 
 
-class ProjectGroup: public ProjectManagerItem
+class ProjectGroup: public PlatformItem
 {
 public:
 	ProjectGroup(std::string name);
@@ -85,6 +76,8 @@ public:
 
 		return isEqual;
 	}
+
+	std::string m_name;
 
 	// project, folder project is in
 	std::map<ProjectInfo*, std::string> m_projects;
