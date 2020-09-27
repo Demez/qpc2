@@ -18,16 +18,16 @@ public:
 	ProjectContainer* ParseProject(std::string &path);
 
 private:
-	void ParseDefFileRecurse(QPCBlockRoot *root, Platform &platform);
+	void ParseDefFileRecurse(QPCBlockRoot *root, Platform plat);
 	void ParseProjRecurse(QPCBlockRoot *root);
 
 	// these aren't the best names, but whatever
-	inline void Manager_AddMacro(QPCBlock *block, Platform &platform);
-	void Manager_AddConfigs(QPCBlock *block, Platform &platform);
-	void Manager_AddProject(QPCBlock *block, Platform &platform);
-	void Manager_AddGroup(QPCBlock *block, Platform &platform);
+	inline void Manager_AddMacro(QPCBlock *block, Platform plat);
+	void Manager_AddConfigs(QPCBlock *block, Platform plat);
+	void Manager_AddProject(QPCBlock *block, Platform plat);
+	void Manager_AddGroup(QPCBlock *block, Platform plat);
 
-	void Manager_ParseGroup(QPCBlock *block, Platform &plat, ProjectGroup &group, std::vector<std::string> &folderList);
+	void Manager_ParseGroup(QPCBlock *block, Platform plat, ProjectGroup* group, fs::path &folder);
 
 	void Proj_SetScriptMacros(fs::path filePath);
 	void Proj_AddMacro(QPCBlock *block);

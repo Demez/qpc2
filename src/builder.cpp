@@ -29,15 +29,12 @@ void ProjectBuilder::ParseDefFile(std::string &path)
 }
 
 
-void ProjectBuilder::ParseDefFileRecurse(QPCBlockRoot *root, Platform &plat)
+void ProjectBuilder::ParseDefFileRecurse(QPCBlockRoot *root, Platform plat)
 {
 	ProjectManager& manager = GetProjManager();
 
-	for (QPCBlock* block: root->m_items)
+	for (QPCBlock* block: root->GetItemsCond(manager.m_macros[plat]))
 	{
-		if (!block->SolveCondition(manager.m_macros[plat]))
-			continue;
-
 		std::string key = ReplaceMacros(manager.m_macros[plat], block->m_key);
 
 		if (key == "macro")
@@ -71,12 +68,12 @@ void ProjectBuilder::ParseDefFileRecurse(QPCBlockRoot *root, Platform &plat)
 	}
 }
 
-inline void ProjectBuilder::Manager_AddMacro(QPCBlock *block, Platform &plat)
+inline void ProjectBuilder::Manager_AddMacro(QPCBlock *block, Platform plat)
 {
 	GetProjManager().m_macros[plat][block->m_key] = block->m_values[0];
 }
 
-void ProjectBuilder::Manager_AddConfigs(QPCBlock *block, Platform &plat)
+void ProjectBuilder::Manager_AddConfigs(QPCBlock *block, Platform plat)
 {
 	ProjectManager& manager = GetProjManager();
 	for (QPCBlock* cfg: block->GetItemsCond(manager.m_macros[plat]))
@@ -86,47 +83,79 @@ void ProjectBuilder::Manager_AddConfigs(QPCBlock *block, Platform &plat)
 }
 
 
-void ProjectBuilder::Manager_AddProject(QPCBlock *block, Platform &plat)
+void ProjectBuilder::Manager_AddProject(QPCBlock *block, Platform plat)
 {
-	ProjectInfo project = GetProjManager().CreateProject(block->GetValue(0), block->GetValue(1));
-	if (!project.Valid())
+	ProjectInfo* project = GetProjManager().CreateProject(block->GetValue(0), block->GetValue(1));
+	if (!project)
 		return;
 
-	project.AddPlatform(plat);
+	project->AddPlatform(plat);
 	GetProjManager().AddProject(project);
 }
 
 
-void ProjectBuilder::Manager_AddGroup(QPCBlock *block, Platform &plat)
+void ProjectBuilder::Manager_AddGroup(QPCBlock *block, Platform plat)
 {
-	ProjectGroup group = GetProjManager().CreateGroup(block->GetValue(0));
-	if (!group.Valid())
+	ProjectGroup* group = GetProjManager().CreateGroup(block->GetValue(0));
+	if (!group)
 		return;
 
-	group.AddPlatform(plat);
+	group->AddPlatform(plat);
 	if (GetProjManager().AddGroup(group) != ProjManError::NONE)
 		return;
 
-	Manager_ParseGroup(block, plat, group, std::vector<std::string> {});
+	Manager_ParseGroup(block, plat, group, fs::path(""));
 }
 
 
-void ProjectBuilder::Manager_ParseGroup(QPCBlock *block, Platform &plat, ProjectGroup &group, std::vector<std::string> &folderList)
+void ProjectBuilder::Manager_ParseGroup(QPCBlock *block, Platform plat, ProjectGroup* group, fs::path &folder)
 {
 	ProjectManager& manager = GetProjManager();
 
-	for (QPCBlock* item: block->GetItemsCond( manager.m_macros[plat] ))
+	for (QPCBlock* item: block->GetItemsCond(manager.m_macros[plat]))
 	{
-		ProjectInfo& project = manager.GetProject(item->m_key);
-
-		if (project.Valid())
+		if (item->m_key == "folder")
 		{
+			if (item->m_values.empty())
+			{
+				item->warning("Group folder with no name!");
+				// just add the projects to the current folder
+				Manager_ParseGroup(item, plat, group, folder);
+			}
+			else
+			{
+				folder.append(item->GetValue(0));
+				Manager_ParseGroup(item, plat, group, folder);
+				folder = folder.parent_path();
+			}
 
+			continue;
 		}
-		else
+
+		ProjectInfo* project = manager.GetProject(item->m_key);
+
+		if (!project)
 		{
+			std::string name = item->m_key;
+			std::string path = "";
 
+			// are we adding a project by it's path in a group?
+			if (FileExists(item->m_key))
+			{
+				// TODO: remove the file extension
+				name = fs::path(item->m_key).filename().string(); 
+				path = item->m_key;
+			}
+
+			project = manager.CreateProject(name, path);
+			if (!project)
+				continue;
+
+			project->AddPlatform(plat);
+			manager.AddProject(project);
 		}
+
+		manager.AddProjToGroup(group, project, folder.string());
 	}
 }
 

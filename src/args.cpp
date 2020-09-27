@@ -11,6 +11,13 @@ inline bool ArgEqual(const char* name, const char* shortHand, const char* arg)
 }
 
 
+// stupid
+inline bool ArgParser::CheckOtherArg(int i)
+{
+    return (std::string(argv[i]).substr(0, 1) == "-");
+}
+
+
 bool ArgParser::CheckParam(char* name, char* shortHand)
 {
     for (int i = 0; i < argc; i++)
@@ -49,12 +56,15 @@ std::vector<std::string> ArgParser::GetParamList(char* name, char* shortHand, st
 
         std::vector<std::string> paramList;
 
-        for (; i < argc; ++i)
+        for (i++; i < argc; ++i)
         {
-            if (vec_contains<std::string>(choices, argv[i]))
+            if (CheckOtherArg(i))
+                break;
+
+            if (choices.empty() || vec_contains<std::string>(choices, argv[i]))
                 paramList.push_back(argv[i]);
             else
-                warning("Invalid generator: \"%s\"", argv[i]);
+                warning("Invalid choice: \"%s\"", argv[i]);
         }
 
         return paramList;

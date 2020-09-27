@@ -3,10 +3,6 @@
 #include "util.h"
 
 
-enum class Platform;
-enum class Arch;
-
-
 // bruh moment
 class Args
 {
@@ -41,6 +37,8 @@ class ArgParser
 {
 public:
 	void ParseArgs(int argc, const char** argv);
+
+	bool CheckOtherArg(int i);
 
 	bool CheckParam(char* shortHand, char* value);
 

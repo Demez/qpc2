@@ -11,11 +11,56 @@ constexpr int g_QPCVersion = 10;
 constexpr const char* g_QPCVersionS = "1.0";
 
 
+inline bool ShouldAddDependencies(ProjectInfo* info)
+{
+	return (vec_contains(GetArgs().addDepend, info->m_name) || vec_contains(GetArgs().addDepend, info->m_path));
+}
+
+
+ProjectContainer* ParseProject(ProjectBuilder& builder, ProjectInfo* info)
+{
+	ProjectContainer* proj = builder.ParseProject(info->m_path);
+	ProjectManager& manager = GetProjManager();
+
+	for (ProjectPass* pass: proj->m_passes)
+	{
+		for (std::string dep: pass->m_deps)
+		{
+			ProjectInfo* depInfo = GetProjManager().GetProject(dep);
+			if (!depInfo)
+				continue;
+
+			// are we adding dependencies for this project?
+			// and are we not removing this project?
+			if (ShouldAddDependencies(info) && !manager.ShouldRemoveProject(depInfo))
+			{
+				manager.AddToBuildList(depInfo);
+			}
+
+			info->AddDependency(depInfo);
+		}
+	}
+
+	return proj;
+}
+
+
+bool ShouldBuildProject(ProjectInfo* info)
+{
+	if (GetArgs().force)
+	{
+		return true;
+	}
+
+	// some hash stuff here
+
+	return true;
+}
+
+
 // :trollface:
 auto main(int argc, const char** argv) -> int
 {
-	std::string test = PlatformToStr((Platform)8);
-
 	printf("Quiver Project Creator C++\n");
 
 	ArgParser* argParser = new ArgParser;
@@ -44,15 +89,40 @@ auto main(int argc, const char** argv) -> int
 	// might need to change this a little bit,
 	// but make sure to have it so you can add more projects in this for loop (adding dependencies)
 	std::vector<ProjectContainer*> bruh;
-	for (int i = 0; i < manager.m_projects.size(); i++)
+
+	// maybe make a project queue in the ProjectManager class?
+	// and any project added initially will be added to that queue?
+	for (int i = 0; i < manager.m_buildList.size(); i++)
 	{
-		ProjectInfo& info = manager.m_projects[i];
+		ProjectInfo* info = manager.m_buildList[i];
 
-		if (!FileExists(info.m_path))
-			continue;
+		// i probably don't need to check this, since the builder/manager handles that
+		// if (!FileExists(info->m_path))
+		// 	continue;
 
-		ProjectContainer* proj = builder.ParseProject(info.m_path);
-		bruh.push_back(proj);
+		if (ShouldBuildProject(info))
+		{
+			ProjectContainer* proj = ParseProject(builder, info);
+
+			if (GetArgs().force)
+			{
+				// all generators rebuild
+			}
+			else
+			{
+				// for loop through each generator,
+				// check if it's project exists (some just always return false lol)
+				// if true, then check the hash of each to see if we should rebuild
+			}
+
+			bruh.push_back(proj);
+
+			// delete proj;
+		}
+		else
+		{
+			// get the dependencies in the hash file
+		}
 	}
 
 	printf("Parsed %d projects: ", bruh.size());

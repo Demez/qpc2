@@ -146,6 +146,23 @@ std::vector<std::string> PlatformStr = {
 };
 
 
+/*template <class T>
+std::string EnumToStr(T item)
+{
+	if (item >= T::COUNT || item < T::INVALID)
+		return T::INVALID;
+		// return ArchStr[0];
+
+	return strList[(int)item];
+}
+
+
+template <class T>
+T StrToEnum(std:vector<std::string> strList, std::string &plat)
+{
+}*/
+
+
 std::string PlatformToStr(Platform platform)
 {
 	if (platform >= Platform::COUNT || platform < Platform::INVALID)
@@ -195,6 +212,7 @@ void SetArchMacros(StringMap &macros, Arch arch)
 	macros["ARM"] = arch == Arch::ARM ? "1" : "0";
 	macros["ARM64"] = arch == Arch::ARM64 ? "1" : "0";
 }
+
 
 
 
