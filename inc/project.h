@@ -63,7 +63,7 @@ public:
 
 	bool AddMacro(std::string key, std::string value);
 
-	bool AddFile(std::string &filePath, std::string &folder, FileType type);
+	bool AddFile(std::string &filePath, const std::string &folder, FileType type);
 	// bool AddFileGlob(std::string &filePath, std::string &folder, FileType &type);
 	// bool RemoveFile(std::string &filePath);
 	// bool RemoveFileGlob(std::string &filePath);

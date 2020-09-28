@@ -6,7 +6,7 @@ std::regex g_condOperators("(\\(|\\)|\\|\\||\\&\\&|>=|<=|==|!=|>|<)");
 
 
 // finds macros that could potentially work in this string
-StringMap GetPotentialMacros(StringMap &macros, std::string &string)
+StringMap GetPotentialMacros(StringMap &macros, const std::string &string)
 {
 	StringMap potentialMacros;
 	for (auto const&[key, value]: macros)
@@ -23,7 +23,7 @@ StringMap GetPotentialMacros(StringMap &macros, std::string &string)
 
 
 // why tf did i put this in conditions.cpp
-std::string ReplaceMacros(StringMap &macros, std::string &string)
+std::string ReplaceMacros(StringMap &macros, const std::string &string)
 {
 	if (string.find("$") == std::string::npos)
 		return string;

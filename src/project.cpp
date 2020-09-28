@@ -82,7 +82,7 @@ ProjectPass::ProjectPass(ProjectContainer* container, std::string config, Platfo
 }
 
 
-bool ProjectPass::AddFile(std::string &filePath, std::string &folder, FileType type)
+bool ProjectPass::AddFile(std::string &filePath, const std::string &folder, FileType type)
 {
 	if (IsFileAdded(filePath))
 		return false;

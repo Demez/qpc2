@@ -165,7 +165,7 @@ ProjectInfo* ProjectManager::GetProject(std::string &pathOrName)
 }
 
 
-ProjectInfo* ProjectManager::GetProject(std::string &name, std::string &path)
+ProjectInfo* ProjectManager::GetProject(const std::string &name, std::string &path)
 {
 	// check if this is added already
 	for (ProjectInfo* addedProject: m_projects)

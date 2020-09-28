@@ -103,7 +103,7 @@ public:
 	ProjManError                        AddProjToGroup(ProjectGroup* group, ProjectInfo* project, std::string folder);
 
 	ProjectInfo*                        GetProject(std::string &pathOrName);
-	ProjectInfo*                        GetProject(std::string &name, std::string &path);
+	ProjectInfo*                        GetProject(const std::string &name, std::string &path);
 
 	ProjectGroup*                       GetGroup(std::string &name);
 

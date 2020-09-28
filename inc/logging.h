@@ -24,13 +24,13 @@ inline void warningFinal(const char* str)
 
 inline void warningVA(const char* str, va_list args)
 {
-	char argsStr[1024] = "";
+	/*char argsStr[1024] = "";
 	sprintf(argsStr, "%s", str);
 	va_start(args, str);
 	sprintf(argsStr, "%s%s", argsStr, va_arg(args, const char*));
 	va_end(args);
 
-	warningFinal(argsStr);
+	warningFinal(argsStr);*/
 }
 
 

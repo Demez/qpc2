@@ -104,7 +104,8 @@ void ProjectBuilder::Manager_AddGroup(QPCBlock *block, Platform plat)
 	if (GetProjManager().AddGroup(group) != ProjManError::NONE)
 		return;
 
-	Manager_ParseGroup(block, plat, group, fs::path(""));
+	fs::path fspath("");
+	Manager_ParseGroup(block, plat, group, fspath);
 }
 
 
@@ -174,8 +175,6 @@ ProjectContainer* ProjectBuilder::ParseProject(std::string &path)
 {
 	QPCBlockRoot* qpcRoot = ReadFile(path);
 
-	ProjectManager& manager = GetProjManager();
-
 	fs::path fsPath = path;
 	ProjectContainer* projContainer = new ProjectContainer(fsPath);
 
@@ -212,7 +211,8 @@ void ProjectBuilder::ParseProjRecurse(QPCBlockRoot *root)
 		}
 		else if (block->m_key == "files")
 		{
-			Proj_HandleFiles(block, fs::path(""));
+			fs::path fspath("");
+			Proj_HandleFiles(block, fspath);
 		}
 		else if (block->m_key == "requires")
 		{

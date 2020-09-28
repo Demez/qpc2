@@ -101,7 +101,7 @@ private:
 		m_lineChar = 0;
 	}
 
-	bool QPCLexer::CheckChar(char ch, char ch1, char ch2)
+	bool CheckChar(char ch, char ch1, char ch2)
 	{
 		if (ch == ch1 || ch == ch2)
 			return true;

@@ -9,12 +9,12 @@ const char* FormatStringVA(const char* str, va_list args)
 {
 	char* finalStr = "";
 
-	va_start(args, str);
+	/*va_start(args, str);
 	{
 		str = va_arg(args, const char*);
 		sprintf(finalStr, str);
 	}
-	va_end(args);
+	va_end(args);*/
 
 	return finalStr;
 }
