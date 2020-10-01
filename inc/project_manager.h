@@ -94,6 +94,7 @@ public:
 		return manager;
 	}
 
+	ProjectInfo*                        CreateProject(std::string path);
 	ProjectInfo*                        CreateProject(std::string name, std::string path);
 	ProjectGroup*                       CreateGroup(std::string name);
 
