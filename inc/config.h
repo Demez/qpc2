@@ -20,6 +20,15 @@ enum class ProjError
 	COUNT
 };
 
+enum class EPCH
+{
+	INVALID = 0,
+	NONE,
+	CREATE,
+	USE,
+	COUNT
+};
+
 enum class ConfigType
 {
 	INVALID = 0,
@@ -66,8 +75,6 @@ public:
 		cfg = config;
 	}
 
-	virtual void ParseOption(StringMap& macros, QPCBlock& option) = 0;
-
 	Config* cfg;
 };
 
@@ -99,8 +106,14 @@ public:
 	ProjError SetConfigType(std::string value);
 	ProjError SetConfigType(ConfigType value);
 
+	ProjError SetLanguageAndStandard(std::string value);
+
+	ProjError SetLanguage(std::string value);
+	ProjError SetLanguage(Language value);
+
+	ProjError SetStandard(Standard value);
+
 	void Init(Config* config);
-	void ParseOption(StringMap& macros, QPCBlock& option);
 
 };
 
@@ -110,7 +123,7 @@ class Compile: public ConfigGroup
 public:
 	bool defaultIncDirs = true;
 
-	std::string pch;
+	EPCH pch;
 	std::string pchFile;
 	std::string pchOut;
 
@@ -118,8 +131,10 @@ public:
 	std::vector<std::string> incDirs;
 	std::vector<std::string> options;
 
-	// void Init(Config* config);
-	void ParseOption(StringMap& macros, QPCBlock& option);
+	ProjError SetPCH(EPCH value);
+	ProjError SetPCH(std::string value);
+
+	ProjError SetDefaultIncDirs(std::string &value);
 };
 
 
@@ -140,8 +155,8 @@ public:
 	std::vector<std::string> libDirs;
 	std::vector<std::string> options;
 
-	// void Init(Config* config);
-	void ParseOption(StringMap& macros, QPCBlock& option);
+	ProjError SetDefaultLibDirs(std::string &value);
+	ProjError SetIgnoreImpLib(std::string &value);
 };
 
 
@@ -151,8 +166,6 @@ public:
 	std::string cmd;
 	std::string args;
 	std::string cwd;
-
-	void ParseOption(StringMap& macros, QPCBlock& option);
 };
 
 

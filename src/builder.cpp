@@ -6,6 +6,58 @@
 #include "conditions.h"
 
 
+void ProjectBuilder::SetListOption(StringMap& macros, QPCBlock *option, std::vector<std::string> &vec)
+{
+	std::vector<std::string> values;
+	bool removing = false;
+
+	for (QPCBlock* optionList: option->GetItemsCond(m_proj->m_macros))
+	{
+		removing = (optionList->m_key == "-");
+		values = optionList->m_values;
+
+		if (!removing)
+		{
+			values.insert(values.begin(), optionList->m_key);
+		}
+		else if (values.empty())
+		{
+			optionList->warning("No items set to remove in \"%s\"", option->m_key.c_str());
+			continue;
+		}
+
+		for (std::string item: values)
+		{
+			item = ReplaceProjMacros(item);
+
+			if (vec_contains(vec, item))
+			{
+				if (!removing)
+				{
+					optionList->warning("Item already added to list \"%s\": \"%s\"", option->m_key.c_str(), item.c_str());
+				}
+				else
+				{
+					vec_remove(vec, item);
+				}
+			}
+			else
+			{
+				if (!removing)
+				{
+					vec.push_back(item);
+				}
+				else
+				{
+					optionList->warning("Trying to remove item not in list \"%s\": \"%s\"", option->m_key.c_str(), item.c_str());
+				}
+			}
+
+		}
+	}
+}
+
+
 void ProjectBuilder::ParseDefFile(std::string &path)
 {
 	if (!FileExists(path))
@@ -199,8 +251,14 @@ void ProjectBuilder::ParseProjRecurse(QPCBlockRoot *root)
 {
 	Proj_SetScriptMacros(root->m_filePath);
 
-	for (QPCBlock* block: root->GetItemsCond(m_proj->m_macros))
+	for (QPCBlock* block: root->m_items)
 	{
+		// cannot use GetItemsCond, as new macros can be defined here
+		if (!block->SolveCondition(m_proj->m_macros))
+		{
+			continue;
+		}
+
 		if (block->m_key == "macro")
 		{
 			Proj_AddMacro(block);
@@ -230,7 +288,7 @@ void ProjectBuilder::ParseProjRecurse(QPCBlockRoot *root)
 				continue;
 			}
 
-			std::string path = ReplaceMacros(m_proj->m_macros, block->m_values[0]);
+			std::string path = ReplaceProjMacros(block->m_values[0]);
 			if (!FileExists(path))
 			{
 				block->warning("File does not exist: \"%s\"!", path.c_str());
@@ -253,11 +311,8 @@ void ProjectBuilder::ParseProjRecurse(QPCBlockRoot *root)
 
 void ProjectBuilder::Proj_HandleFiles(QPCBlock *block, fs::path &folder)
 {
-	for (QPCBlock* item: block->m_items)
+	for (QPCBlock* item: block->GetItemsCond(m_proj->m_macros))
 	{
-		if (!item->SolveCondition(m_proj->m_macros))
-			continue;
-
 		if (item->m_key == "folder")
 		{
 			folder.append(item->m_values[0]);
@@ -293,23 +348,21 @@ void ProjectBuilder::Proj_AddFiles(QPCBlock *block, fs::path &folder)
 {
 	for (std::string filePath: block->GetList())
 	{
-		filePath = ReplaceMacros(m_proj->m_macros, filePath);
+		filePath = ReplaceProjMacros(filePath);
 
-		if (m_proj->IsFileAdded(filePath))
+		if ( !m_proj->AddFile(filePath, folder.string(), GetFileType(filePath)) )
 		{
 			warning("File already added: \"%s\"", filePath.c_str());
 			continue;
-		}
-
-		m_proj->AddFile(filePath, folder.string(), GetFileType(filePath));
+		};
 	}
 }
 
 
 void ProjectBuilder::Proj_AddMacro(QPCBlock *block)
 {
-	std::string key = ReplaceMacros(m_proj->m_macros, block->GetValue(0));
-	std::string value = ReplaceMacros(m_proj->m_macros, block->GetValue(1));
+	std::string key = ReplaceProjMacros(block->GetValue(0));
+	std::string value = ReplaceProjMacros(block->GetValue(1));
 	m_proj->AddMacro(key, value);
 }
 
@@ -336,8 +389,37 @@ void ProjectBuilder::Proj_HandleDependencies(QPCBlock *block)
 }
 
 
-void ProjectBuilder::Proj_HandleConfig(QPCBlock *block)
+void ProjectBuilder::Proj_HandleConfig(QPCBlock *cfg)
 {
+	for (QPCBlock* groupBlock: cfg->GetItemsCond(m_proj->m_macros))
+	{
+		std::string group = ReplaceProjMacros(groupBlock->m_key);
+
+		if (group == "general")
+		{
+			Proj_ParseConfigGeneral(m_proj->m_macros, groupBlock);
+		}
+		else if (group == "compile")
+		{
+			Proj_ParseConfigCompile(m_proj->m_macros, groupBlock);
+		}
+		else if (group == "link")
+		{
+			Proj_ParseConfigLink(m_proj->m_macros, groupBlock);
+		}
+		else if (group == "debug")
+		{
+			Proj_ParseConfigDebug(m_proj->m_macros, groupBlock);
+		}
+		else if (group == "pre_build" || group == "pre_link" || group == "post_build")
+		{
+			Proj_ParseConfigBuildEvent(m_proj->m_macros, groupBlock);
+		}
+		else
+		{
+			printf("Unknown group option: \"%s\"", group.c_str());
+		}
+	}
 }
 
 
@@ -348,8 +430,278 @@ void ProjectBuilder::Proj_HandleBuildEvent(QPCBlock *block)
 
 void ProjectBuilder::Proj_SetScriptMacros(fs::path filePath)
 {
-	m_proj->AddMacro("SCRIPT_NAME", filePath.filename().string());
+	std::string nameNoExt = filePath.filename().string();
+	ReplaceString(nameNoExt, filePath.extension().string(), "");
+
+	m_proj->AddMacro("SCRIPT_NAME", nameNoExt);
 	m_proj->AddMacro("SCRIPT_DIR", filePath.parent_path().string());
+}
+
+
+void ProjectBuilder::Proj_ParseConfigGeneral(StringMap& macros, QPCBlock *group)
+{
+	for (QPCBlock* option: group->GetItemsCond(m_proj->m_macros))
+	{
+		std::string key = ReplaceProjMacros(option->m_key);
+
+		if (key == "options")
+		{
+			option->warning("options list in general is removed, as it's useless");
+			continue;
+		}
+		else if (option->m_values.empty())
+		{
+			option->warning("No value specified after option \"%s\"", key.c_str());
+			continue;
+		}
+
+		std::string value = ReplaceProjMacros(option->GetValue());
+
+		if (key == "out_dir")
+		{
+			m_proj->cfg.general.outDir = value;
+		}
+		else if (key == "build_dir")
+		{
+			m_proj->cfg.general.buildDir = value;
+		}
+		else if (key == "out_name")
+		{
+			m_proj->cfg.general.outName = value;
+		}
+		else if (key == "out_name_prefix")
+		{
+			m_proj->cfg.general.outNamePrefix = value;
+		}
+		else if (key == "out_name_postfix")
+		{
+			m_proj->cfg.general.outNamePostfix = value;
+		}
+		else if (key == "compiler")
+		{
+			m_proj->cfg.general.compiler = value;
+		}
+		else if (key == "config_type")
+		{
+			if (m_proj->cfg.general.SetConfigType(value) == ProjError::INVALID_OPTION)
+			{
+				option->warning("Invalid Option for config_type: \"%s\"", value.c_str());
+				continue;
+			}
+		}
+		else if (key == "language" || key == "lang")
+		{
+			if (m_proj->cfg.general.SetLanguageAndStandard(value) == ProjError::INVALID_OPTION)
+			{
+				option->warning("Invalid Option for language: \"%s\"", value.c_str());
+				continue;
+			}
+		}
+		else
+		{
+			option->warning("Unknown option in general group: \"%s\"", key.c_str());
+		}
+	}
+}
+
+
+void ProjectBuilder::Proj_ParseConfigCompile(StringMap& macros, QPCBlock *group)
+{
+	std::string key;
+
+	for (QPCBlock* option: group->GetItemsCond(m_proj->m_macros))
+	{
+		key = ReplaceProjMacros(option->m_key);
+
+		if (option->m_items.empty())
+		{
+			if (option->m_values.empty())
+			{
+				option->warning("No value specified after option \"%s\"", key.c_str());
+				continue;
+			}
+
+			std::string value = ReplaceProjMacros(option->GetValue());
+
+			if (key == "default_inc_dirs")
+			{
+				if (m_proj->cfg.compile.SetDefaultIncDirs(value) == ProjError::INVALID_OPTION)
+				{
+					option->warning("Invalid Option for default_inc_dirs: \"%s\"", value.c_str());
+					continue;
+				}
+			}
+			else if (key == "pch")
+			{
+				if (m_proj->cfg.compile.SetPCH(value) == ProjError::INVALID_OPTION)
+				{
+					option->warning("Invalid Option for pch: \"%s\"", value.c_str());
+					continue;
+				}
+			}
+			else if (key == "pch_file")
+			{
+				m_proj->cfg.compile.pchFile = value;
+			}
+			else if (key == "pch_out")
+			{
+				m_proj->cfg.compile.pchOut = value;
+			}
+			else
+			{
+				option->warning("Unknown option in compile group: \"%s\"", key.c_str());
+			}
+		}
+		else
+		{
+			if (key == "defines")
+			{
+				SetListOption(macros, option, m_proj->cfg.compile.defines);
+			}
+			else if (key == "inc_dirs")
+			{
+				SetListOption(macros, option, m_proj->cfg.compile.incDirs);
+			}
+			else if (key == "options")
+			{
+				SetListOption(macros, option, m_proj->cfg.compile.options);
+			}
+			else
+			{
+				option->warning("Unknown option in compile group: \"%s\"", key.c_str());
+			}
+		}
+	}
+}
+
+
+void ProjectBuilder::Proj_ParseConfigLink(StringMap& macros, QPCBlock *group)
+{
+	std::string key;
+
+	for (QPCBlock* option: group->GetItemsCond(m_proj->m_macros))
+	{
+		key = ReplaceProjMacros(option->m_key);
+
+		if (option->m_items.empty())
+		{
+			if (option->m_values.empty())
+			{
+				option->warning("No value specified after option \"%s\"", key.c_str());
+				continue;
+			}
+
+			std::string value = ReplaceProjMacros(option->GetValue());
+
+			if (key == "default_lib_dirs")
+			{
+				if (m_proj->cfg.link.SetDefaultLibDirs(value) == ProjError::INVALID_OPTION)
+				{
+					option->warning("Invalid Option for default_lib_dirs: \"%s\"", value.c_str());
+					continue;
+				}
+			}
+			else if (key == "ignore_import_lib")
+			{
+				if (m_proj->cfg.link.SetIgnoreImpLib(value) == ProjError::INVALID_OPTION)
+				{
+					option->warning("Invalid Option for ignore_import_lib: \"%s\"", value.c_str());
+					continue;
+				}
+			}
+			else if (key == "output_file")
+			{
+				m_proj->cfg.link.outFile = value;
+			}
+			else if (key == "debug_file")
+			{
+				m_proj->cfg.link.dbgFile = value;
+			}
+			else if (key == "import_lib")
+			{
+				m_proj->cfg.link.impLib = value;
+			}
+			else if (key == "entry_point")
+			{
+				m_proj->cfg.link.entryPoint = value;
+			}
+			else
+			{
+				option->warning("Unknown option in link group: \"%s\"", key.c_str());
+			}
+		}
+		else
+		{
+			if (key == "libs")
+			{
+				SetListOption(macros, option, m_proj->cfg.link.libs);
+			}
+			else if (key == "ignore_libs")
+			{
+				SetListOption(macros, option, m_proj->cfg.link.ignoreLibs);
+			}
+			else if (key == "lib_dirs")
+			{
+				SetListOption(macros, option, m_proj->cfg.link.libDirs);
+			}
+			else if (key == "options")
+			{
+				SetListOption(macros, option, m_proj->cfg.link.options);
+			}
+			else
+			{
+				option->warning("Unknown option in link group: \"%s\"", key.c_str());
+			}
+		}
+	}
+}
+
+
+void ProjectBuilder::Proj_ParseConfigDebug(StringMap& macros, QPCBlock *group)
+{
+	std::string key;
+
+	for (QPCBlock* option: group->GetItemsCond(m_proj->m_macros))
+	{
+		key = ReplaceProjMacros(option->m_key);
+
+		if (option->m_values.empty())
+		{
+			option->warning("No value specified after option \"%s\"", key.c_str());
+			continue;
+		}
+
+		std::string value = ReplaceProjMacros(option->GetValue());
+
+		if (key == "arguments" || key == "args")
+		{
+			m_proj->cfg.debug.args = value;
+		}
+		else if (key == "command" || key == "cmd")
+		{
+			m_proj->cfg.debug.cmd = value;
+		}
+		else if (key == "working_dir" || key == "cwd")
+		{
+			m_proj->cfg.debug.cwd = value;
+		}
+		else
+		{
+			option->warning("Unknown option in debug group: \"%s\"", key.c_str());
+		}
+	}
+}
+
+
+void ProjectBuilder::Proj_ParseConfigBuildEvent(StringMap& macros, QPCBlock *event)
+{
+
+}
+
+
+std::string ProjectBuilder::ReplaceProjMacros(const std::string &string)
+{
+	return ::ReplaceMacros(m_proj->m_macros, string);
 }
 
 

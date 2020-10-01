@@ -39,6 +39,15 @@ private:
 	void Proj_AddFiles(QPCBlock *block, fs::path &folder);
 //	void Proj_AddFilesGlob(QPCBlock &block, std::vector<std::string> &folders);
 //	void Proj_RemoveFiles(QPCBlock &block, std::vector<std::string> &folders);
+
+	void Proj_ParseConfigGeneral(StringMap& macros, QPCBlock *group);
+	void Proj_ParseConfigCompile(StringMap& macros, QPCBlock *group);
+	void Proj_ParseConfigLink(StringMap& macros, QPCBlock *group);
+	void Proj_ParseConfigDebug(StringMap& macros, QPCBlock *group);
+	void Proj_ParseConfigBuildEvent(StringMap& macros, QPCBlock *event);
+
+	void SetListOption(StringMap& macros, QPCBlock *option, std::vector<std::string> &vec);
+	std::string ReplaceProjMacros(const std::string &string);
 	
 	ProjectPass* m_proj = NULL;
 	int m_counter = 0;

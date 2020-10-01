@@ -4,9 +4,33 @@
 #include "project.h"
 
 
+const std::vector<std::string> g_configType = 
+{
+	"DYNAMIC_LIB",
+	"STATIC_LIB",
+	"APPLICATION",
+};
+
+const std::vector<std::string> g_standard = 
+{
+	"CPPLATEST",
+	"CPP17",
+	"CPP14",
+	"CPP11",
+	"CPP03",
+	"CPP98",
+
+	"C11",
+	"C99",
+	"C95",
+	"C90",
+	"C89",
+};
+
+
 ProjError ConvertBoolOption(bool &prevValue, std::string value)
 {
-	std::transform(value.begin(), value.end(), value.begin(), ::toupper);
+	str_upper(value);
 
 	if (value == "true" || value == "1")
 	{
@@ -39,6 +63,14 @@ ProjError VerifyEnum(int &value, int max)
 
 ProjError General::SetConfigType(std::string value)
 {
+	str_upper(value);
+
+	if (!vec_contains(g_configType, value))
+	{
+		return ProjError::INVALID_OPTION;
+	}
+
+	SetConfigType((ConfigType)(vec_index(g_configType, value) + 1));
 	return ProjError::NONE;
 }
 
@@ -48,11 +80,154 @@ ProjError General::SetConfigType(ConfigType value)
 	int iValue = (int)value;
 	ProjError ret = VerifyEnum(iValue, (int)ConfigType::COUNT);
 
-	if (ret != ProjError::NONE)
+	if (ret == ProjError::NONE)
+	{
 		configType = value;
+	}
 
 	return ret;
 }
+
+
+ProjError General::SetLanguageAndStandard(std::string value)
+{
+	str_upper(value);
+	
+	if (value.substr(0, 3) == "CPP")
+	{
+		lang = Language::CPP;
+	}
+	else if (value.substr(0, 1) == "C")
+	{
+		lang = Language::C;
+	}
+	else
+	{
+		return ProjError::INVALID_OPTION;
+	}
+
+	if (vec_contains(g_standard, value))
+	{
+		SetStandard((Standard)vec_index(g_standard, value));
+	}
+
+	return ProjError::NONE;
+}
+
+
+ProjError General::SetLanguage(std::string value)
+{
+	str_upper(value);
+
+	if (value == "CPP")
+	{
+		lang = Language::CPP;
+	}
+	else if (value == "C")
+	{
+		lang = Language::C;
+	}
+	else
+	{
+		return ProjError::INVALID_OPTION;
+	}
+
+	return ProjError::NONE;
+}
+
+
+ProjError General::SetLanguage(Language value)
+{
+	int iValue = (int)value;
+	ProjError ret = VerifyEnum(iValue, (int)Language::COUNT);
+
+	if (ret == ProjError::NONE)
+	{
+		lang = value;
+	}
+
+	return ret;
+}
+
+
+ProjError General::SetStandard(Standard value)
+{
+	int iValue = (int)value;
+	ProjError ret = VerifyEnum(iValue, (int)Standard::COUNT);
+
+	if (ret == ProjError::NONE)
+	{
+		standard = value;
+	}
+
+	return ret;
+}
+
+
+// ================================================================
+
+
+ProjError Compile::SetPCH(EPCH value)
+{
+	int iValue = (int)value;
+	ProjError ret = VerifyEnum(iValue, (int)EPCH::COUNT);
+
+	if (ret == ProjError::NONE)
+	{
+		pch = value;
+	}
+
+	return ret;
+}
+
+
+ProjError Compile::SetPCH(std::string value)
+{
+	str_upper(value);
+
+	if (value == "NONE")
+	{
+		pch = EPCH::NONE;
+	}
+	else if (value == "CREATE")
+	{
+		pch = EPCH::CREATE;
+	}
+	else if (value == "USE")
+	{
+		pch = EPCH::USE;
+	}
+	else
+	{
+		return ProjError::INVALID_OPTION;
+	}
+
+	return ProjError::NONE;
+}
+
+
+ProjError Compile::SetDefaultIncDirs(std::string &value)
+{
+	return ConvertBoolOption(defaultIncDirs, value);
+}
+
+
+// ================================================================
+
+
+ProjError Link::SetDefaultLibDirs(std::string &value)
+{
+	return ConvertBoolOption(defaultLibDirs, value);
+}
+
+
+ProjError Link::SetIgnoreImpLib(std::string &value)
+{
+	return ConvertBoolOption(ignoreImpLib, value);
+}
+
+
+// ================================================================
 
 
 Config::Config(ProjectPass* proj, std::string name)
@@ -67,33 +242,6 @@ Config::Config(ProjectPass* proj, std::string name)
 }
 
 
-// i probably should not use this
-void Config::ParseOption(std::string &group, QPCBlock& option)
-{
-	if (group == "general")
-		general.ParseOption(proj->m_macros, option);
-
-	else if (group == "compile")
-		compile.ParseOption(proj->m_macros, option);
-
-	else if (group == "link")
-		link.ParseOption(proj->m_macros, option);
-
-	else if (group == "debug")
-		debug.ParseOption(proj->m_macros, option);
-
-	else if (group == "pre_build" || group == "pre_link" || group == "post_build")
-	{
-
-	}
-	else
-	{
-		printf("Unknown group option: \"%s\"", group.c_str());
-	}
-}
-
-
-
 void General::Init(Config* config)
 {
 	ConfigGroup::Init(config);
@@ -106,23 +254,6 @@ void General::Init(Config* config)
 	standard = Standard::CPP17;
 
 	// std::string default_dir = f"{self._config.get_name()}/f{platform.name.lower()}"
-}
-
-
-void General::ParseOption(StringMap& macros, QPCBlock& option)
-{
-}
-
-void Compile::ParseOption(StringMap& macros, QPCBlock& option)
-{
-}
-
-void Link::ParseOption(StringMap& macros, QPCBlock& option)
-{
-}
-
-void Debug::ParseOption(StringMap& macros, QPCBlock& option)
-{
 }
 
 
