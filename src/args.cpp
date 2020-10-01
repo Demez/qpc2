@@ -186,9 +186,8 @@ void ArgParser::ParseArgs(int argc, const char** argv)
                                    GetGeneratorHandler().GetArgNames(),
                                    GetGeneratorHandler().GetArgNames());
 
-    // TODO: setup defaults here
-    args.platforms = GetParamList<Platform>("--platforms", "-p", &StrToPlatformArgs, {});
-    args.archs = GetParamList<Arch>("--archs", "-ar", &StrToArchArgs, {});
+    args.platforms = GetParamList<Platform>("--platforms", "-p", &StrToPlatformArgs, {GetSysPlatform()});
+    args.archs = GetParamList<Arch>("--archs", "-ar", &StrToArchArgs, {GetSysArch()});
 
     args.macros = GetParamStringMap("--macros", "-D");
 }
