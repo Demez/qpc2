@@ -80,9 +80,9 @@ void SetupArgProjects()
 				name = name.substr(0, name.length() - fspath.extension().string().length()); 
 			}
 		}
-		else
+		else if (!manager.GetProject(path) && !manager.GetGroup(path))
 		{
-			warning("File does not exist: \"%s\"", path);
+			warning("File, Project, or Group does not exist: \"%s\"", path.c_str());
 			continue;
 		}
 
