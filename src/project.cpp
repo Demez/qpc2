@@ -33,9 +33,9 @@ ProjectContainer::ProjectContainer(fs::path path)
 		{ "ROOT_DIR_ABS",           GetArgs().rootDir },
 		{ "ROOT_DIR",               path.relative_path().string() },
 		{ "PROJECT_NAME",           nameNoExt },
-		{ "PROJECT_SCRIPT_NAME",    name.string() },
+		{ "PROJECT_SCRIPT_NAME",    nameNoExt },
 		{ "PROJECT_DIR",            dir },
-		{ "SCRIPT_NAME",            name.string() },
+		{ "SCRIPT_NAME",            nameNoExt },
 		{ "SCRIPT_DIR",             dir },
 	};
 
@@ -82,6 +82,14 @@ ProjectPass::ProjectPass(ProjectContainer* container, std::string config, Platfo
 }
 
 
+ProjectPass::~ProjectPass()
+{
+	RemoveAllFilesInternal(m_sourceFiles);
+	RemoveAllFilesInternal(m_headerFiles);
+	RemoveAllFilesInternal(m_files);
+}
+
+
 bool ProjectPass::AddFile(std::string &filePath, const std::string &folder, FileType type)
 {
 	if (IsFileAdded(filePath))
@@ -89,12 +97,12 @@ bool ProjectPass::AddFile(std::string &filePath, const std::string &folder, File
 
 	if (type == FileType::SOURCE)
 	{
-		SourceFile file = {filePath, folder, type};
+		SourceFile* file = new SourceFile{filePath, folder, type};
 		m_sourceFiles.push_back(file);
 	}
 	else
 	{
-		File file = {filePath, folder, type};
+		File* file = new File{filePath, folder, type};
 		
 		if (type == FileType::HEADER)
 			m_headerFiles.push_back(file);
@@ -128,17 +136,43 @@ bool ProjectPass::IsFileAdded(std::string &filePath, FileType type)
 
 
 template <class T>
-bool ProjectPass::IsFileAddedInternal(std::string &filePath, std::vector<T> &files)
+bool ProjectPass::IsFileAddedInternal(std::string &filePath, std::vector<T*> &files)
 {
-	for (T file: files)
+	for (T* file: files)
 	{
-		if (file.path == filePath)
+		if (file->path == filePath)
 		{
 			return true;
 		}
 	}
 
 	return false;
+}
+
+
+template <class T>
+void ProjectPass::RemoveAllFilesInternal(std::vector<T*> &files)
+{
+	for (T* file: files)
+	{
+		delete file;
+	}
+
+	files.clear();
+}
+
+
+template <class T>
+void ProjectPass::RemoveFileInternal(std::string &filePath, std::vector<T*> &files)
+{
+	for (T* file: files)
+	{
+		if (file->path == filePath)
+		{
+			delete file;
+			return;
+		}
+	}
 }
 
 
@@ -166,7 +200,7 @@ bool ProjectPass::RemoveDependency(std::string &filePath)
 }
 
 
-bool ProjectPass::AddMacro(std::string key, std::string value)
+void ProjectPass::AddMacro(std::string key, std::string value)
 {
 	if (!value.empty())
 	{
@@ -177,7 +211,16 @@ bool ProjectPass::AddMacro(std::string key, std::string value)
 		m_macros[key] = "";
 	}
 
-	return true;
+	ReplaceUndefinedMacros();
+}
+
+
+void ProjectPass::ReplaceUndefinedMacros()
+{
+	for (auto const&[key, value]: m_macros)
+	{
+		m_macros[key] = ReplaceMacros(m_macros, value);
+	}
 }
 
 

@@ -56,12 +56,13 @@ class ProjectPass
 {
 public:
 	ProjectPass(ProjectContainer* container, std::string config, Platform platform, Arch arch, StringMap &macros);
-	~ProjectPass() {}
+	~ProjectPass();
 
 	bool AddDependency(std::string &filePath);
 	bool RemoveDependency(std::string &filePath);
 
-	bool AddMacro(std::string key, std::string value);
+	void AddMacro(std::string key, std::string value);
+	void ReplaceUndefinedMacros();
 
 	bool AddFile(std::string &filePath, const std::string &folder, FileType type);
 	// bool AddFileGlob(std::string &filePath, std::string &folder, FileType &type);
@@ -72,15 +73,21 @@ public:
 	bool IsFileAdded(std::string &filePath, FileType type);
 
 	template <class T = File>
-	bool IsFileAddedInternal(std::string &filePath, std::vector<T> &files);
+	bool IsFileAddedInternal(std::string &filePath, std::vector<T*> &files);
+
+	template <class T = File>
+	void RemoveFileInternal(std::string &filePath, std::vector<T*> &files);
+
+	template <class T = File>
+	void RemoveAllFilesInternal(std::vector<T*> &files);
 
 	Config cfg;
 
 	StringMap m_macros;
 
-	std::vector<SourceFile> m_sourceFiles;
-	std::vector<File> m_headerFiles;
-	std::vector<File> m_files;
+	std::vector<SourceFile*> m_sourceFiles;
+	std::vector<File*> m_headerFiles;
+	std::vector<File*> m_files;
 	std::vector<std::string> m_deps;
 
 	Arch m_arch;
