@@ -156,8 +156,22 @@ void ProjectBuilder::Manager_AddGroup(QPCBlock *block, Platform plat)
 	if (GetProjManager().AddGroup(group) != ProjManError::NONE)
 		return;
 
+	// check if we want to add this to other groups?
+	// item->m_values.size() > 1
+
 	fs::path fspath("");
 	Manager_ParseGroup(block, plat, group, fspath);
+
+	// ugly, adds projects from other groups into this one
+	for (auto const&[otherGroup, groupFolder]: group->m_otherGroups)
+	{
+		for (auto const&[otherProj, projFolder]: otherGroup->m_projects)
+		{
+			fs::path fullFolder = groupFolder;
+			fullFolder.append(projFolder);
+			GetProjManager().AddProjToGroup(group, otherProj, fullFolder.string());
+		}
+	}
 }
 
 
@@ -183,6 +197,28 @@ void ProjectBuilder::Manager_ParseGroup(QPCBlock *block, Platform plat, ProjectG
 			}
 
 			continue;
+		}
+		else if (item->m_key == "contains")
+		{
+			if (item->m_values.empty())
+			{
+				item->warning("No groups selected to add into this group!");
+			}
+
+			for (std::string otherName: item->m_values)
+			{
+				otherName = ReplaceMacros(manager.m_macros[plat], otherName);
+
+				ProjectGroup* other = manager.GetGroup(otherName);
+
+				if (!other)
+				{
+					other = manager.CreateGroup(otherName);
+					manager.AddGroup(other);
+				}
+
+				group->m_otherGroups[other] = folder.string();
+			}
 		}
 
 		ProjectInfo* project = manager.GetProject(item->m_key);

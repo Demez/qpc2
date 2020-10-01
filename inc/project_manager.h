@@ -78,8 +78,9 @@ public:
 
 	std::string m_name;
 
-	// project, folder project is in
+	// project/group, folder item is in
 	std::map<ProjectInfo*, std::string> m_projects;
+	std::map<ProjectGroup*, std::string> m_otherGroups;
 };
 
 
