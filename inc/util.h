@@ -30,6 +30,19 @@ size_t vec_index(std::vector<T> &vec, T item)
 
 
 template <class T>
+size_t vec_index(const std::vector<T> &vec, T item)
+{
+	for (size_t i = 0; i < vec.size(); i++)
+	{
+		if (vec[i] == item)
+			return i;
+	}
+
+	return SIZE_MAX;
+}
+
+
+template <class T>
 void vec_remove(std::vector<T> &vec, T item)
 {
 	vec.erase(vec.begin() + vec_index(vec, item));
@@ -49,6 +62,30 @@ bool vec_contains(std::vector<T> &vec, T item)
 }
 
 
+template <class T>
+bool vec_contains(const std::vector<T> &vec, T item)
+{
+	for (T addedItem: vec)
+	{
+		if (addedItem == item)
+			return true;
+	}
+
+	return false;
+}
+
+
+inline void str_upper(std::string &string)
+{
+	std::transform(string.begin(), string.end(), string.begin(), ::toupper);
+}
+
+inline void str_lower(std::string &string)
+{
+	std::transform(string.begin(), string.end(), string.begin(), ::tolower);
+}
+
+
 enum class Arch
 {
 	INVALID = 0,
@@ -56,6 +93,7 @@ enum class Arch
 	I386,
 	ARM,
 	ARM64,
+	// IA64,
 	COUNT,
 };
 
@@ -72,6 +110,9 @@ enum class Platform
 
 
 size_t              str_count(std::string string, std::string item);
+
+Platform            GetSysPlatform();
+Arch                GetSysArch();
 
 Platform            StrToPlatform(std::string &plat);
 Arch                StrToArch(std::string &plat);

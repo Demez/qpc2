@@ -2,11 +2,13 @@
 #include "args.h"
 #include <map>
 #include <io.h>
+#include <sys/stat.h>
 
 #ifdef _WIN32
 #include <direct.h>
-#else
-
+#include <windows.h>
+#elif __linux__
+#include <stdlib.h>
 #endif
 
 
@@ -24,6 +26,89 @@ size_t str_count(std::string string, std::string item)
 	}
 
 	return count;
+}
+
+
+Platform GetSysPlatform()
+{
+#ifdef _WIN32
+	return Platform::WINDOWS;
+#elif __linux__
+	return Platform::LINUX;
+#elif __APPLE__
+	return Platform::MACOS;
+#else
+	#error "No Default Platform Enum set for system"
+#endif
+}
+
+
+Arch GetSysArch()
+{
+#ifdef _WIN32
+
+	LPSYSTEM_INFO lpSystemInfo;
+	GetNativeSystemInfo(lpSystemInfo);
+	WORD arch = lpSystemInfo->wProcessorArchitecture;
+
+	if (arch == PROCESSOR_ARCHITECTURE_AMD64)
+	{
+		return Arch::AMD64;
+	}
+	else if (arch == PROCESSOR_ARCHITECTURE_ARM64)
+	{
+		return Arch::ARM64;
+	}
+	else if (arch == PROCESSOR_ARCHITECTURE_ARM)
+	{
+		return Arch::ARM;
+	}
+	/*else if (arch == PROCESSOR_ARCHITECTURE_IA64)
+	{
+		return Arch::IA64;
+	}*/
+	else
+	{
+		return Arch::I386;
+	}
+
+#elif __linux__
+
+	FILE *pf;
+	char command[20];
+	char data[512];
+
+	sprintf(command, "uname -p >/dev/null 2>&1f");
+	pf = popen(command,"r");
+	fgets(data, 512 , pf);
+
+	if (pclose(pf) != 0)
+		fprintf(stderr," Error: Failed to close command stream \n");
+
+	std::string arch = data;
+
+	if (arch == "x86_64")
+	{
+		return Arch::AMD64;
+	}
+	else if (arch == "arm7l")
+	{
+		return Arch::ARM64;
+	}
+	else if (arch == "arm")
+	{
+		return Arch::ARM;
+	}
+	else
+	{
+		return Arch::I386;
+	}
+
+#elif __APPLE__
+	return Arch::AMD64;
+#else
+	#error "No Default Arch Enum set for system"
+#endif
 }
 
 
@@ -178,6 +263,7 @@ std::vector<std::string> ArchStr = {
 	"I386",
 	"ARM",
 	"ARM64",
+	// "IA64",
 };
 
 std::vector<std::string> PlatformStr = {
