@@ -120,32 +120,22 @@ std::string QPCBlock::GetFormattedInfo()
 void QPCBlock::warning(const char* str, ...)
 {
 	char finalStr[1024] = {};
-	sprintf(finalStr, "%s", str);
 
-	const char* vaStr;
 	va_list args;
 	va_start(args, str);
 	{
-		vaStr = va_arg(args, const char*);
-		char* strCheck = strstr(finalStr, "%s");
-
-		if (strCheck)
+		if (strstr((char*)str, "%"))
 		{
-			char tmpStr[1024] = {};
-			sprintf(tmpStr, finalStr, vaStr);
-			sprintf(finalStr, "%s", tmpStr);
+			vsprintf(finalStr, str, args);
 		}
 		else
 		{
-			sprintf(finalStr, "%s%s", finalStr, vaStr);
+			sprintf(finalStr, "%s", str);
 		}
 	}
 	va_end(args);
 
-	std::string info = GetFormattedInfo();
-	info += "\n          ";
-	info += finalStr;
-
+	std::string info = (GetFormattedInfo() + "\n          " + finalStr);
 	::warning( (info).c_str() );
 }
 
