@@ -1,5 +1,6 @@
 #include "args.h"
 #include "util.h"
+#include "logging.h"
 #include "builder.h"
 #include "project.h"
 #include "project_manager.h"
@@ -58,6 +59,47 @@ bool ShouldBuildProject(ProjectInfo* info)
 }
 
 
+void SetupArgProjects()
+{
+	ProjectManager& manager = GetProjManager();
+
+	for (std::string arg: GetArgs().add)
+	{
+		std::string name = arg;
+		std::string path = arg;
+
+		// are we adding a project by it's path in a group?
+		if (FileExists(path))
+		{
+			fs::path fspath = fs::path(path).filename();
+			name = fspath.string(); 
+
+			if (fspath.has_extension())
+			{
+				// remove the file extension
+				name = name.substr(0, name.length() - fspath.extension().string().length()); 
+			}
+		}
+		else
+		{
+			warning("File does not exist: \"%s\"", path);
+			continue;
+		}
+
+		ProjectInfo* project = manager.CreateProject(name, path);
+		if (!project)
+			continue;
+
+		for (Platform plat: GetArgPlatforms())
+		{
+			project->AddPlatform(plat);
+		}
+
+		manager.AddProject(project);
+	}
+}
+
+
 // :trollface:
 auto main(int argc, const char** argv) -> int
 {
@@ -79,6 +121,8 @@ auto main(int argc, const char** argv) -> int
 		else
 			printf("Base File does not exist: \"%s\"", baseFile.c_str());
 	}
+
+	SetupArgProjects();
 
 	ProjectManager& manager = GetProjManager();
 
