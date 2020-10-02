@@ -40,14 +40,14 @@ public:
 
 	bool CheckOtherArg(int i);
 
-	bool CheckParam(char* shortHand, char* value);
+	bool CheckParam(const char* shortHand, const char* value);
 
-	const char*                 GetParamValueStr(char* name, char* shortHand, const char* defaultValue = "");
-	std::vector<std::string>    GetParamList(char* name, char* shortHand, std::vector<std::string> defaultValue = {}, std::vector<std::string> choices = {});
-	StringMap                   GetParamStringMap(char* name, char* shortHand);
+	const char*                 GetParamValueStr(const char* name, const char* shortHand, const char* defaultValue = "");
+	std::vector<std::string>    GetParamList(const char* name, const char* shortHand, std::vector<std::string> defaultValue = {}, std::vector<std::string> choices = {});
+	StringMap                   GetParamStringMap(const char* name, const char* shortHand);
 
 	template <class T>
-	std::vector<T> GetParamList(char* name, char* shortHand, EnumParamConvertFunc func, std::vector<T> defaultValue);
+	std::vector<T> GetParamList(const char* name, const char* shortHand, EnumParamConvertFunc func, std::vector<T> defaultValue);
 
 	int argc;
 	const char** argv;

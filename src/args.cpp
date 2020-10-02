@@ -7,7 +7,7 @@
 
 inline bool ArgEqual(const char* name, const char* shortHand, const char* arg)
 {
-    return (strncmp(name, arg, sizeof(arg)) == 0 || strncmp(shortHand, arg, sizeof(arg)) == 0);
+    return (strncmp(name, arg, sizeof(const char*)) == 0 || strncmp(shortHand, arg, sizeof(const char*)) == 0);
 }
 
 
@@ -18,7 +18,7 @@ inline bool ArgParser::CheckOtherArg(int i)
 }
 
 
-bool ArgParser::CheckParam(char* name, char* shortHand)
+bool ArgParser::CheckParam(const char* name, const char* shortHand)
 {
     for (int i = 0; i < argc; i++)
     {
@@ -30,7 +30,7 @@ bool ArgParser::CheckParam(char* name, char* shortHand)
 }
 
 
-const char* ArgParser::GetParamValueStr(char* name, char* shortHand, const char* defaultValue)
+const char* ArgParser::GetParamValueStr(const char* name, const char* shortHand, const char* defaultValue)
 {
     for (int i = 0; i < argc; i++)
     {
@@ -47,7 +47,7 @@ const char* ArgParser::GetParamValueStr(char* name, char* shortHand, const char*
 }
 
 
-std::vector<std::string> ArgParser::GetParamList(char* name, char* shortHand, std::vector<std::string> defaultValue, std::vector<std::string> choices)
+std::vector<std::string> ArgParser::GetParamList(const char* name, const char* shortHand, std::vector<std::string> defaultValue, std::vector<std::string> choices)
 {
     for (int i = 0; i < argc; i++)
     {
@@ -77,7 +77,7 @@ std::vector<std::string> ArgParser::GetParamList(char* name, char* shortHand, st
 
 
 template <class T>
-std::vector<T> ArgParser::GetParamList(char* name, char* shortHand, EnumParamConvertFunc func, std::vector<T> defaultValue)
+std::vector<T> ArgParser::GetParamList(const char* name, const char* shortHand, EnumParamConvertFunc func, std::vector<T> defaultValue)
 {
     for (int i = 0; i < argc; i++)
     {
@@ -107,7 +107,7 @@ std::vector<T> ArgParser::GetParamList(char* name, char* shortHand, EnumParamCon
 }
 
 
-StringMap ArgParser::GetParamStringMap(char* name, char* shortHand)
+StringMap ArgParser::GetParamStringMap(const char* name, const char* shortHand)
 {
     for (int i = 0; i < argc; i++)
     {

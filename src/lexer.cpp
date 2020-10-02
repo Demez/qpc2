@@ -126,11 +126,11 @@ void QPCBlock::warning(const char* str, ...)
 	{
 		if (strstr((char*)str, "%"))
 		{
-			vsprintf(finalStr, str, args);
+			vsnprintf(finalStr, 1024, str, args);
 		}
 		else
 		{
-			sprintf(finalStr, "%s", str);
+			snprintf(finalStr, 1024, "%s", str);
 		}
 	}
 	va_end(args);
@@ -216,7 +216,6 @@ std::string QPCLexer::NextKey()
 {
 	char ch;
 	std::string str = "";
-	int line_num = 0;
 
 	while (m_chari < m_fileLen)
 	{
