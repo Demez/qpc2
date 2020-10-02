@@ -143,21 +143,13 @@ void SolveSingleCondition(StringMap &macros, std::vector<std::string> &cond)
 	else if (vec_contains(cond, std::string("&&")))
 	{
 		pos = vec_index(cond, std::string("&&"));
-
-		int lValue = StrToIntCond(cond[pos - 1]);
-		int rValue = StrToIntCond(cond[pos + 1]);
-
 		result = (StrToIntCond(cond[pos - 1]) > 0 && StrToIntCond(cond[pos + 1]) > 0);
 	}
 
 	else if (vec_contains(cond, std::string("||")))
 	{
 		pos = vec_index(cond, std::string("||"));
-
-		int lValue = StrToIntCond(cond[pos - 1]);
-		int rValue = StrToIntCond(cond[pos + 1]);
-
-		result = (lValue > 0 || rValue > 0);
+		result = (StrToIntCond(cond[pos - 1]) > 0 || StrToIntCond(cond[pos + 1]) > 0);
 	}
 
 	cond[pos] = std::to_string(result);

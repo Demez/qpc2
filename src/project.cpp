@@ -97,7 +97,7 @@ bool ProjectPass::AddFile(std::string &filePath, const std::string &folder, File
 
 	if (type == FileType::SOURCE)
 	{
-		SourceFile* file = new SourceFile{filePath, folder, type};
+		SourceFile* file = new SourceFile{{filePath, folder, type}};
 		m_sourceFiles.push_back(file);
 	}
 	else

@@ -8,8 +8,8 @@
 // #include "hash.h"
 
 
-constexpr int g_QPCVersion = 10;
-constexpr const char* g_QPCVersionS = "1.0";
+// constexpr int g_QPCVersion = 10;
+// constexpr const char* g_QPCVersionS = "1.0";
 
 
 void SetupArgProjects()
@@ -207,7 +207,7 @@ auto main(int argc, const char** argv) -> int
 		}
 	}
 
-	printf("\nFinished, Parsed %d projects\n", manager.m_buildList.size());
+	printf("\nFinished, Parsed %llu projects\n", manager.m_buildList.size());
 
 	return 0;
 }
