@@ -25,6 +25,15 @@ config
 	
 	compile
 	{
+		defines
+		{
+			"_X86_" [$I386$]
+			"_AMD64_" [$AMD64$]
+			"_ARM64_" [$ARM64$]
+			"_ARM_" [$ARM$]
+			// "_IA64_" [$IA64$]
+		}
+		
 		inc_dirs
 		{
 			"$ROOT_DIR$/src"

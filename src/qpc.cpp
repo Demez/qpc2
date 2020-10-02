@@ -12,53 +12,6 @@ constexpr int g_QPCVersion = 10;
 constexpr const char* g_QPCVersionS = "1.0";
 
 
-inline bool ShouldAddDependencies(ProjectInfo* info)
-{
-	return (vec_contains(GetArgs().addDepend, info->m_name) || vec_contains(GetArgs().addDepend, info->m_path));
-}
-
-
-ProjectContainer* ParseProject(ProjectBuilder& builder, ProjectInfo* info)
-{
-	ProjectContainer* proj = builder.ParseProject(info->m_path);
-	ProjectManager& manager = GetProjManager();
-
-	for (ProjectPass* pass: proj->m_passes)
-	{
-		for (std::string dep: pass->m_deps)
-		{
-			ProjectInfo* depInfo = GetProjManager().GetProject(dep);
-			if (!depInfo)
-				continue;
-
-			// are we adding dependencies for this project?
-			// and are we not removing this project?
-			if (ShouldAddDependencies(info) && !manager.ShouldRemoveProject(depInfo))
-			{
-				manager.AddToBuildList(depInfo);
-			}
-
-			info->AddDependency(depInfo);
-		}
-	}
-
-	return proj;
-}
-
-
-bool ShouldBuildProject(ProjectInfo* info)
-{
-	if (GetArgs().force)
-	{
-		return true;
-	}
-
-	// some hash stuff here
-
-	return true;
-}
-
-
 void SetupArgProjects()
 {
 	ProjectManager& manager = GetProjManager();
@@ -100,10 +53,70 @@ void SetupArgProjects()
 }
 
 
+bool ShouldBuildProject(ProjectInfo* info)
+{
+	if (GetArgs().force)
+	{
+		return true;
+	}
+
+	// TODO: only use the generators we want in the arguments, setup a list of that or something
+	for (BaseGenerator* gen: GetGeneratorHandler().m_generators)
+	{
+		if (gen->DoesProjectNeedRebuild(info))
+		{
+			return true;
+		}
+	}
+
+	// some hash stuff here
+
+	return true;
+}
+
+
+inline bool ShouldAddDependencies(ProjectInfo* info)
+{
+	return (vec_contains(GetArgs().addDepend, info->m_name) || vec_contains(GetArgs().addDepend, info->m_path));
+}
+
+
+ProjectContainer* ParseProject(ProjectBuilder& builder, ProjectInfo* info)
+{
+	ProjectContainer* proj = builder.ParseProject(info->m_path);
+	ProjectManager& manager = GetProjManager();
+
+	for (ProjectPass* pass: proj->m_passes)
+	{
+		for (std::string dep: pass->m_deps)
+		{
+			ProjectInfo* depInfo = GetProjManager().GetProject(dep);
+			if (!depInfo)
+				continue;
+
+			// are we adding dependencies for this project?
+			// and are we not removing this project?
+			if (ShouldAddDependencies(info) && !manager.ShouldRemoveProject(depInfo))
+			{
+				manager.AddToBuildList(depInfo);
+			}
+
+			info->AddDependency(depInfo);
+		}
+	}
+
+	return proj;
+}
+
+
 // :trollface:
 auto main(int argc, const char** argv) -> int
 {
 	printf("Quiver Project Creator C++\n");
+
+	g_exePath = argv[0];
+
+	GetGeneratorHandler().LoadGenerators();
 
 	ArgParser* argParser = new ArgParser;
 	argParser->ParseArgs(argc, argv);
@@ -129,13 +142,9 @@ auto main(int argc, const char** argv) -> int
 	for (std::string cfg: GetArgs().configs)
 		manager.AddConfig(cfg);
 
-	// this would go through every single project found
-	// might need to change this a little bit,
-	// but make sure to have it so you can add more projects in this for loop (adding dependencies)
-	std::vector<ProjectContainer*> bruh;
-
-	// maybe make a project queue in the ProjectManager class?
-	// and any project added initially will be added to that queue?
+	// m_buildList is a project queue in the ProjectManager class
+	// any project added initially will be added to that queue, and you can add stuff to it while parsing projects
+	// used for adding dependencies of a project
 	for (int i = 0; i < manager.m_buildList.size(); i++)
 	{
 		ProjectInfo* info = manager.m_buildList[i];
@@ -153,17 +162,25 @@ auto main(int argc, const char** argv) -> int
 			if (GetArgs().force)
 			{
 				// all generators rebuild
+				for (BaseGenerator* gen: GetGeneratorHandler().m_generators)
+				{
+					gen->CreateProject(proj);
+				}
 			}
 			else
 			{
-				// for loop through each generator,
-				// check if it's project exists (some just always return false lol)
-				// if true, then check the hash of each to see if we should rebuild
+				for (BaseGenerator* gen: GetGeneratorHandler().m_generators)
+				{
+					// TODO: when you create the hashing system,
+					// allow generators to put their own stuff in it, and check it here
+					if (gen->DoesProjectNeedRebuild(info))
+					{
+						gen->CreateProject(proj);
+					}
+				}
 			}
 
-			bruh.push_back(proj);
-
-			// delete proj;
+			delete proj;
 		}
 		else
 		{
@@ -171,7 +188,26 @@ auto main(int argc, const char** argv) -> int
 		}
 	}
 
-	printf("Parsed %d projects: ", bruh.size());
+	// master file stuff now
+	// maybe change to masterProject or masterProjectName?
+	// though that might be confused with a default project in visual studio solutions
+	if (!GetArgs().masterFile.empty())
+	{
+		for (BaseGenerator* gen: GetGeneratorHandler().m_generators)
+		{
+			if (!gen->GeneratesMasterFile())
+			{
+				continue;
+			}
+
+			if (gen->DoesMasterFileNeedRebuild(GetArgs().masterFile))
+			{
+				gen->CreateMasterFile(GetArgs().masterFile);
+			}
+		}
+	}
+
+	printf("\nFinished, Parsed %d projects\n", manager.m_buildList.size());
 
 	return 0;
 }

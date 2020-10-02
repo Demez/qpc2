@@ -1,0 +1,28 @@
+// ---------------------------------------------------------------
+// Base Generator Project Script for Quiver Project Creator 2
+// ---------------------------------------------------------------
+
+include "$SCRIPT_DIR$/core.qpc"
+
+
+files
+{
+	// TODO: actually move these files to some shared folder or something, and nuke the inc/src separation probably
+	folder "QPC Shared"
+	{
+		"$ROOT_DIR$/src/base_generator.cpp"
+		"$ROOT_DIR$/src/config.cpp"
+		// "$ROOT_DIR$/src/lexer.cpp"  // will be shared just for the hash system
+		"$ROOT_DIR$/src/logging.cpp"  // useless ass file
+		"$ROOT_DIR$/src/project.cpp"
+		"$ROOT_DIR$/src/project_manager.cpp"
+		"$ROOT_DIR$/src/util.cpp"
+		
+		 // idk if these should be shared
+		"$ROOT_DIR$/src/args.cpp" 
+		"$ROOT_DIR$/src/conditions.cpp"  // only here because i use it in project.cpp in ReplaceUndefinedMacros
+		
+		// stupid, only here because of args.cpp, really shouldn't be
+		"$ROOT_DIR$/src/generator_handler.cpp"
+	}
+}

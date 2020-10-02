@@ -2,13 +2,13 @@
 // Project Script for Quiver Project Creator C++
 // ---------------------------------------------------------------
 
-macro PROJECT_NAME "Gen - Visual Studio"
-macro OUT_NAME "vstudio"
+macro PROJECT_NAME "Gen - CMake"
+macro OUT_NAME "cmake"
 
 include "base/gen.qpc"
 
 files
 {
-	"../src/gen/vstudio.cpp"
+	"../src/gen/cmake.cpp"
 }
 

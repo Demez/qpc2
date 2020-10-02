@@ -4,23 +4,16 @@
 #include "base_generator.h"
 
 
-
 class GeneratorHandler
 {
 public:
-	GeneratorHandler() {}
+	GeneratorHandler();
+	~GeneratorHandler();
 
 	static GeneratorHandler& GetHandler()
 	{
 		static GeneratorHandler handler;
 		return handler;
-	}
-
-	void LoadGenerators();
-
-	void RegisterGenerator(BaseGenerator* generator)
-	{
-		m_generators.push_back(generator);
 	}
 
 	int GetGeneratorID(BaseGenerator* generator)
@@ -41,7 +34,11 @@ public:
 		return argNames;
 	}
 
+	void LoadGenerators();
+	void LoadGeneratorModule(fs::path &filePath);
+
 	std::vector<BaseGenerator*> m_generators;
+	std::vector<GeneratorInterface*> m_genIntList;
 };
 
 
