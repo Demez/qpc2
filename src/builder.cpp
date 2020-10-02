@@ -77,6 +77,8 @@ void ProjectBuilder::ParseDefFile(std::string &path)
 		ParseDefFileRecurse(qpcRoot, platform);
 	}
 
+	manager.SetupGroupIncludes();
+
 	delete qpcRoot;
 }
 
@@ -153,25 +155,13 @@ void ProjectBuilder::Manager_AddGroup(QPCBlock *block, Platform plat)
 		return;
 
 	group->AddPlatform(plat);
-	if (GetProjManager().AddGroup(group) != ProjManError::NONE)
-		return;
+	GetProjManager().AddGroup(group);
 
 	// check if we want to add this to other groups?
 	// item->m_values.size() > 1
 
 	fs::path fspath("");
 	Manager_ParseGroup(block, plat, group, fspath);
-
-	// ugly, adds projects from other groups into this one
-	for (auto const&[otherGroup, groupFolder]: group->m_otherGroups)
-	{
-		for (auto const&[otherProj, projFolder]: otherGroup->m_projects)
-		{
-			fs::path fullFolder = groupFolder;
-			fullFolder.append(projFolder);
-			GetProjManager().AddProjToGroup(group, otherProj, fullFolder.string());
-		}
-	}
 }
 
 

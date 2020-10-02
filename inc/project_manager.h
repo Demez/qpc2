@@ -109,6 +109,8 @@ public:
 
 	ProjectGroup*                       GetGroup(std::string &name);
 
+	void                                SetupGroupIncludes();
+
 	// project queue stuff
 	ProjManError                        AddToBuildList(ProjectInfo* info);
 	bool                                ShouldAddProject(ProjectInfo* info);

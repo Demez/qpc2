@@ -159,6 +159,24 @@ ProjManError ProjectManager::AddProjToGroup(ProjectGroup* group, ProjectInfo* pr
 }
 
 
+void ProjectManager::SetupGroupIncludes()
+{
+	for (ProjectGroup* group: m_groups)
+	{
+		// ugly, adds projects from other groups into this group
+		for (auto const&[otherGroup, groupFolder]: group->m_otherGroups)
+		{
+			for (auto const&[otherProj, projFolder]: otherGroup->m_projects)
+			{
+				fs::path fullFolder = groupFolder;
+				fullFolder.append(projFolder);
+				AddProjToGroup(group, otherProj, fullFolder.string());
+			}
+		}
+	}
+}
+
+
 ProjectInfo* ProjectManager::GetProject(std::string &pathOrName)
 {
 	return GetProject(fs::path(pathOrName).filename().string(), pathOrName);
