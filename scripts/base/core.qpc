@@ -21,6 +21,9 @@ config
 		
 		language "cpp"
 		config_type "dynamic_lib"
+
+		compiler "g++" [$LINUX$]
+		options { "-std=c++17" [$LINUX$] }
 	}
 	
 	compile
