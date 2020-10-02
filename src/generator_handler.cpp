@@ -23,7 +23,7 @@
 	#include <unistd.h>
 	#include <dlfcn.h>
 
-	#define LOAD_LIBRARY(path) dlopen(path)
+	#define LOAD_LIBRARY(path) dlopen(path, RTLD_LAZY)
 	#define LOAD_FUNC dlsym
 	#define EXT_DLL ".so"
 #endif

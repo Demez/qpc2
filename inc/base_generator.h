@@ -6,6 +6,9 @@
 #include "project.h"
 #include "project_manager.h"
 
+#ifdef __linux__
+#define __stdcall
+#endif
 
 class BaseGenerator;
 

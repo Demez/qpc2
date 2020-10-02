@@ -17,7 +17,15 @@ config
 		out_name "qpc"
 		config_type "application"
 	}
-	
+
+	link
+	{
+		libs
+		{
+			"dl" [$LINUX$]
+			"stdc++fs" [$LINUX$]
+		}
+	}
 }
 
 

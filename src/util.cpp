@@ -1,15 +1,18 @@
 #include "util.h"
 #include "args.h"
 #include <map>
-#include <io.h>
 #include <sys/stat.h>
 
 #ifdef _WIN32
 #include <direct.h>
 #include <windows.h>
+#include <io.h>
 #elif __linux__
 #include <stdlib.h>
 #include <unistd.h>
+
+// windows-specific mkdir() is used
+#define mkdir(f) mkdir(f, 666)
 #endif
 
 

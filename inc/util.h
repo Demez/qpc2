@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstring>
+#include <algorithm>
 #include <string>
 #include <unordered_map>
 #include <initializer_list>
