@@ -22,7 +22,8 @@ const char* FormatStringVA(const char* str, va_list args)
 
 const char* FormatString(const char* str, ...)
 {
-	va_list args;
-	return FormatStringVA(str, args);
+	// va_list args;
+	// return FormatStringVA(str, args);
+	return str;
 }
 
