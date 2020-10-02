@@ -84,7 +84,7 @@ Arch GetSysArch()
 	char command[20];
 	char data[512];
 
-	sprintf(command, "uname -p >/dev/null 2>&1f");
+	sprintf(command, "uname -m >/dev/null 2>&1");
 	pf = popen(command,"r");
 	fgets(data, 512 , pf);
 
