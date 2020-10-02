@@ -8,6 +8,7 @@
 namespace fs = std::filesystem;
 
 
+extern const char* g_exePath;
 extern const char* g_hashDir;
 extern std::vector<std::string> g_extsSource;
 extern std::vector<std::string> g_extsHeader;
@@ -152,7 +153,7 @@ public:
 
 
 // shit name
-class PlatArchItem: PlatformItem
+class PlatArchItem: public PlatformItem
 {
 public:
 	void AddArch(Arch arch);

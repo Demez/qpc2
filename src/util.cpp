@@ -9,9 +9,11 @@
 #include <windows.h>
 #elif __linux__
 #include <stdlib.h>
+#include <unistd.h>
 #endif
 
 
+const char* g_exePath = "";
 const char* g_hashDir = "hashes";
 
 
@@ -47,9 +49,10 @@ Arch GetSysArch()
 {
 #ifdef _WIN32
 
-	LPSYSTEM_INFO lpSystemInfo;
+	LPSYSTEM_INFO lpSystemInfo = (LPSYSTEM_INFO)malloc(sizeof(SYSTEM_INFO));
 	GetNativeSystemInfo(lpSystemInfo);
 	WORD arch = lpSystemInfo->wProcessorArchitecture;
+	free(lpSystemInfo);
 
 	if (arch == PROCESSOR_ARCHITECTURE_AMD64)
 	{
