@@ -23,7 +23,6 @@ config
 		config_type "dynamic_lib"
 
 		compiler "g++" [$LINUX$]
-		options { "-std=c++17" [$LINUX$] }
 	}
 	
 	compile
@@ -42,6 +41,8 @@ config
 			"$ROOT_DIR$/src"
 			"$ROOT_DIR$/inc"
 		}
+
+		options { "-std=c++17" [$LINUX$] }
 	}
 }
 
