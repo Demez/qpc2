@@ -6,26 +6,22 @@
 #include "project.h"
 #include "project_manager.h"
 
-#ifdef __linux__
-#define __stdcall
-#endif
-
 class BaseGenerator;
 
+// update this whenever the struct below is modified
 constexpr unsigned char g_generatorInterfaceVer = 1;
-
 
 struct GeneratorInterface
 {
 	void* mod;                                       // module dll handle
 	const char* fileName;                            // filename of module
-	unsigned char ver = g_generatorInterfaceVer;     // version of all of generators in module
 	unsigned char count = 1;                         // amount of generators in module
 	BaseGenerator** genList;                         // all generators in module
 };
 
 
-typedef GeneratorInterface* (__stdcall *FuncGetInterface)();
+typedef unsigned char (*FuncGetVersion)();
+typedef GeneratorInterface* (*FuncGetInterface)();
 
 
 class BaseGenerator: public PlatArchItem
@@ -68,24 +64,32 @@ public:
 
 
 // Convienence macros
+#define DECLARE_INTERFACE_VERSION() \
+	extern "C" DLL_EXPORT unsigned char GetInterfaceVersion() \
+	{ \
+		return g_generatorInterfaceVer; \
+	}
+
 #define DECLARE_GENERATOR_INTERFACE(num) \
 	extern "C" DLL_EXPORT GeneratorInterface* GetGeneratorInterface() \
 	{ \
 		GeneratorInterface* genInt = new GeneratorInterface; \
-		genInt->ver = g_generatorInterfaceVer; \
 		genInt->count = num; \
-		genInt->genList = new BaseGenerator*[num];
+		genInt->genList = new BaseGenerator*[num]; \
+		size_t i = 0;
 
-#define ADD_GENERATOR(index, genClass) \
-		genInt->genList[index] = new genClass;
+#define ADD_GENERATOR(genClass) \
+		genInt->genList[i] = new genClass; \
+		i++;
 
 #define END_GENERATOR_INTERFACE() \
-		return genInt; \
+ 		return genInt; \
 	}
 
 
 #define DECLARE_SINGLE_GENERATOR(genClass) \
+	DECLARE_INTERFACE_VERSION() \
 	DECLARE_GENERATOR_INTERFACE(1) \
-	ADD_GENERATOR(0, genClass) \
+	ADD_GENERATOR(genClass) \
 	END_GENERATOR_INTERFACE()
 

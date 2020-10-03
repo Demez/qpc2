@@ -6,7 +6,7 @@
 #include <iostream>
 
 
-// junk stuff for other platforms that we need to stub for other platforms
+// junk stuff for windows that we need to stub for other platforms
 #ifndef _WIN32
 	typedef void* Module;
 #endif
@@ -26,6 +26,8 @@
 	#define LOAD_LIBRARY(path) dlopen(path, RTLD_LAZY)
 	#define LOAD_FUNC dlsym
 	#define EXT_DLL ".so"
+#else
+	#error "Library loading not setup for this platform"
 #endif
 
 
@@ -95,6 +97,27 @@ void GeneratorHandler::LoadGeneratorModule(fs::path &filePath)
 		return;
 	}
 
+	FuncGetVersion funcGetVersion = (FuncGetVersion)LOAD_FUNC(mod, "GetInterfaceVersion");
+
+	if (!funcGetVersion)
+	{
+		warning("Failed to find GetGeneratorInterface function in \"%s\"", fileNameC);
+		return;
+	}
+
+	unsigned char intVer = funcGetVersion();
+
+	if (intVer < g_generatorInterfaceVer)
+	{
+		warning("Generator Interface \"%s\" is outdated (Generator is ver %hhu, current ver is %hhu)", fileNameC, intVer, g_generatorInterfaceVer);
+		return;
+	}
+	else if (intVer > g_generatorInterfaceVer)
+	{
+		warning("Generator Interface \"%s\" is newer than current version (Generator is ver %hhu, current ver is %hhu)", fileNameC, intVer, g_generatorInterfaceVer);
+		return;
+	}
+
 	FuncGetInterface funcGetInterface = (FuncGetInterface)LOAD_FUNC(mod, "GetGeneratorInterface");
 
 	if (!funcGetInterface)
@@ -104,20 +127,13 @@ void GeneratorHandler::LoadGeneratorModule(fs::path &filePath)
 	}
 
 	GeneratorInterface* genInt = funcGetInterface();
-
-	if (genInt->ver < g_generatorInterfaceVer)
-	{
-		printf("Generator Interface \"%s\" is outdated (Generator is ver %hhu, current ver is %hhu)", fileNameC, genInt->ver, g_generatorInterfaceVer);
-		return;
-	}
-
 	for (int i = 0; i < genInt->count; i++)
 	{
 		BaseGenerator* gen = genInt->genList[i];
 		m_generators.push_back(gen);
 	}
 
-	delete genInt->genList;
+	delete[] genInt->genList;
 
 	genInt->mod = (void*)mod;
 	genInt->fileName = fileNameC;
