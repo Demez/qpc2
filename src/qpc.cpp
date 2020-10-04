@@ -14,7 +14,7 @@
 
 void SetupArgProjects()
 {
-	ProjectManager& manager = GetProjManager();
+	ProjectManager* manager = GetProjManager();
 
 	for (std::string arg: GetArgs().add)
 	{
@@ -33,13 +33,13 @@ void SetupArgProjects()
 				name = name.substr(0, name.length() - fspath.extension().string().length()); 
 			}
 		}
-		else if (!manager.GetProject(path) && !manager.GetGroup(path))
+		else if (!manager->GetProject(path) && !manager->GetGroup(path))
 		{
 			warning("File, Project, or Group does not exist: \"%s\"", path.c_str());
 			continue;
 		}
 
-		ProjectInfo* project = manager.CreateProject(name, path);
+		ProjectInfo* project = manager->CreateProject(name, path);
 		if (!project)
 			continue;
 
@@ -48,7 +48,7 @@ void SetupArgProjects()
 			project->AddPlatform(plat);
 		}
 
-		manager.AddProject(project);
+		manager->AddProject(project);
 	}
 }
 
@@ -75,30 +75,53 @@ bool ShouldBuildProject(ProjectInfo* info)
 }
 
 
-inline bool ShouldAddDependencies(ProjectInfo* info)
+bool ShouldAddDependencies(ProjectInfo* info)
 {
-	return (vec_contains(GetArgs().addDepend, info->m_name) || vec_contains(GetArgs().addDepend, info->m_path));
+	for (std::string dep: GetArgs().addDepend)
+	{
+		ProjectInfo* depInfo = GetProjManager()->GetProject(dep);
+		if (depInfo)
+		{
+			return true;
+		}
+
+		ProjectGroup* group = GetProjManager()->GetGroup(dep);
+		if (!group)
+		{
+			continue;
+		}
+
+		for (auto const&[project, folder]: group->m_projects)
+		{
+			if (project == info)
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 
 ProjectContainer* ParseProject(ProjectBuilder& builder, ProjectInfo* info)
 {
-	ProjectContainer* proj = builder.ParseProject(info->m_path);
-	ProjectManager& manager = GetProjManager();
+	ProjectContainer* proj = builder.ParseProject(info);
+	ProjectManager* manager = GetProjManager();
 
 	for (ProjectPass* pass: proj->m_passes)
 	{
 		for (std::string dep: pass->m_deps)
 		{
-			ProjectInfo* depInfo = GetProjManager().GetProject(dep);
+			ProjectInfo* depInfo = GetProjManager()->GetProject(dep);
 			if (!depInfo)
 				continue;
 
 			// are we adding dependencies for this project?
 			// and are we not removing this project?
-			if (ShouldAddDependencies(info) && !manager.ShouldRemoveProject(depInfo))
+			if (ShouldAddDependencies(info) && !manager->ShouldRemoveProject(depInfo))
 			{
-				manager.AddToBuildList(depInfo);
+				manager->AddToBuildList(depInfo);
 			}
 
 			info->AddDependency(depInfo);
@@ -137,17 +160,17 @@ auto main(int argc, const char** argv) -> int
 
 	SetupArgProjects();
 
-	ProjectManager& manager = GetProjManager();
+	ProjectManager* manager = GetProjManager();
 
 	for (std::string cfg: GetArgs().configs)
-		manager.AddConfig(cfg);
+		manager->AddConfig(cfg);
 
 	// m_buildList is a project queue in the ProjectManager class
 	// any project added initially will be added to that queue, and you can add stuff to it while parsing projects
 	// used for adding dependencies of a project
-	for (int i = 0; i < manager.m_buildList.size(); i++)
+	for (int i = 0; i < manager->m_buildList.size(); i++)
 	{
-		ProjectInfo* info = manager.m_buildList[i];
+		ProjectInfo* info = manager->m_buildList[i];
 
 		// i probably don't need to check this, since the builder/manager handles that
 		// if (!FileExists(info->m_path))
@@ -155,6 +178,8 @@ auto main(int argc, const char** argv) -> int
 
 		if (ShouldBuildProject(info))
 		{
+			std::string prevDir = GetCurrentDir();
+
 			printf("\nParsing Project: \"%s\"\n", info->m_name.c_str());
 
 			ProjectContainer* proj = ParseProject(builder, info);
@@ -179,6 +204,8 @@ auto main(int argc, const char** argv) -> int
 					}
 				}
 			}
+
+			ChangeDir(prevDir);
 
 			delete proj;
 		}
@@ -207,7 +234,7 @@ auto main(int argc, const char** argv) -> int
 		}
 	}
 
-	printf("\nFinished, Parsed %llu projects\n", manager.m_buildList.size());
+	printf("\nFinished, Parsed %llu projects\n", manager->m_buildList.size());
 
 	return 0;
 }

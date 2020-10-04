@@ -3,6 +3,7 @@
 #include "project_manager.h"
 #include "project.h"
 #include "config.h"
+#include "conditions.h"
 
 
 
@@ -19,19 +20,19 @@ FileType GetFileType(std::string& filePath)
 }
 
 
-ProjectContainer::ProjectContainer(fs::path path)
+ProjectContainer::ProjectContainer(ProjectInfo* info)
 {
-	ProjectManager& manager = GetProjManager();
+	this->info = info;
 
-	std::string dir = path.parent_path().string();
-	fs::path name = path.filename();
+	std::string dir = info->m_path.parent_path().string();
+	fs::path name = info->m_path.filename();
 
 	std::string nameNoExt = name.string();
 	ReplaceString(nameNoExt, name.extension().string(), "");
 
-	StringMap macros = {
+	StringUMap macros = {
 		{ "ROOT_DIR_ABS",           GetArgs().rootDir },
-		{ "ROOT_DIR",               path.relative_path().string() },
+		{ "ROOT_DIR",               info->m_path.relative_path().string() },
 		{ "PROJECT_NAME",           nameNoExt },
 		{ "PROJECT_SCRIPT_NAME",    nameNoExt },
 		{ "PROJECT_DIR",            dir },
@@ -42,7 +43,7 @@ ProjectContainer::ProjectContainer(fs::path path)
 	macros.insert(GetArgs().macros.begin(), GetArgs().macros.end());
 
 	// awful, but i also need to add another for loop for generators with macros later
-	for (std::string config: manager.m_configs)
+	for (std::string config: GetProjManager()->m_configs)
 	{
 		for (Platform platform: GetArgPlatforms())
 		{
@@ -65,7 +66,7 @@ ProjectContainer::~ProjectContainer()
 }
 
 
-ProjectPass::ProjectPass(ProjectContainer* container, std::string config, Platform platform, Arch arch, StringMap &macros):
+ProjectPass::ProjectPass(ProjectContainer* container, std::string config, Platform platform, Arch arch, StringUMap &macros):
 	cfg(this, config)
 {
 	m_container = container;
@@ -223,5 +224,34 @@ void ProjectPass::ReplaceUndefinedMacros()
 	}
 }
 
+
+template <class T>
+std::vector<std::string> GetFileListInternal(std::vector<T*> &fileStructList)
+{
+	std::vector<std::string> fileList;
+
+	for (T* file: fileStructList)
+	{
+		fileList.push_back(file->path);
+	}
+
+	return fileList;
+}
+
+
+std::vector<std::string> ProjectPass::GetSourceFileList()
+{
+	return GetFileListInternal(m_sourceFiles);
+}
+
+std::vector<std::string> ProjectPass::GetHeaderFileList()
+{
+	return GetFileListInternal(m_headerFiles);
+}
+
+std::vector<std::string> ProjectPass::GetFileList()
+{
+	return GetFileListInternal(m_files);
+}
 
 

@@ -2,7 +2,6 @@
 
 #include "util.h"
 #include "project.h"
-#include "lexer.h"
 #include <vector>
 #include <unordered_map>
 #include <regex>
@@ -65,6 +64,9 @@ enum class Standard
 
 	COUNT
 };
+
+
+std::string StandardToNum(Standard standard);
 
 
 class ConfigGroup
@@ -182,8 +184,6 @@ public:
 	Compile compile;
 	Link link;
 	Debug debug;
-
-	void ParseOption(std::string &group, QPCBlock& option);
 };
 
 

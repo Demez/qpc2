@@ -62,7 +62,7 @@ std::vector<std::string> QPCBlock::GetList()
 	return list;
 }
 
-std::vector<QPCBlock*> QPCBlock::GetItemsCond(StringMap &macros)
+std::vector<QPCBlock*> QPCBlock::GetItemsCond(StringUMap &macros)
 {
 	std::vector<QPCBlock*> items;
 
@@ -156,7 +156,7 @@ const char* QPCBlockRoot::GetFilePath()
 }
 
 
-QPCLexer::QPCLexer(std::string &path)
+QPCLexer::QPCLexer(const std::string &path)
 {
 	m_filePath = path;
 	m_file = "";
@@ -504,7 +504,7 @@ void ParseRecursive(QPCLexer& lexer, QPCBlock* block)
 }
 
 
-QPCBlockRoot* ReadFile(std::string &filePath)
+QPCBlockRoot* ReadFile(const std::string &filePath)
 {
 	QPCLexer lexer = QPCLexer(filePath);
 	QPCBlockRoot* qpcFileRoot = new QPCBlockRoot(filePath);

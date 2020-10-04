@@ -4,11 +4,11 @@
 #include <vector>
 #include <unordered_map>
 #include "config.h"
+#include "project_manager.h"
 
 class ProjectPass;
 class Config;
 class SourceFileCompile;
-
 
 
 extern std::vector<std::string> g_extsSource;
@@ -44,10 +44,12 @@ struct SourceFile: public File
 class ProjectContainer
 {
 public:
-	ProjectContainer(fs::path path);
+	ProjectContainer(ProjectInfo* info);
 	~ProjectContainer();
 
 	std::vector<ProjectPass*> m_passes;
+
+	ProjectInfo* info;
 };
 
 
@@ -55,7 +57,7 @@ public:
 class ProjectPass
 {
 public:
-	ProjectPass(ProjectContainer* container, std::string config, Platform platform, Arch arch, StringMap &macros);
+	ProjectPass(ProjectContainer* container, std::string config, Platform platform, Arch arch, StringUMap &macros);
 	~ProjectPass();
 
 	bool AddDependency(std::string &filePath);
@@ -81,9 +83,13 @@ public:
 	template <class T = File>
 	void RemoveAllFilesInternal(std::vector<T*> &files);
 
+	std::vector<std::string> GetSourceFileList();
+	std::vector<std::string> GetHeaderFileList();
+	std::vector<std::string> GetFileList();
+
 	Config cfg;
 
-	StringMap m_macros;
+	StringUMap m_macros;
 
 	std::vector<SourceFile*> m_sourceFiles;
 	std::vector<File*> m_headerFiles;

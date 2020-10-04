@@ -14,7 +14,7 @@ public:
 	ProjectBuilder() {}
 
 	void ParseDefFile(std::string &path);
-	ProjectContainer* ParseProject(std::string &path);
+	ProjectContainer* ParseProject(ProjectInfo* info);
 
 private:
 	void ParseDefFileRecurse(QPCBlockRoot *root, Platform plat);
@@ -40,13 +40,13 @@ private:
 //	void Proj_AddFilesGlob(QPCBlock &block, std::vector<std::string> &folders);
 //	void Proj_RemoveFiles(QPCBlock &block, std::vector<std::string> &folders);
 
-	void Proj_ParseConfigGeneral(StringMap& macros, QPCBlock *group);
-	void Proj_ParseConfigCompile(StringMap& macros, QPCBlock *group);
-	void Proj_ParseConfigLink(StringMap& macros, QPCBlock *group);
-	void Proj_ParseConfigDebug(StringMap& macros, QPCBlock *group);
-	void Proj_ParseConfigBuildEvent(StringMap& macros, QPCBlock *event);
+	void Proj_ParseConfigGeneral(StringUMap& macros, QPCBlock *group);
+	void Proj_ParseConfigCompile(StringUMap& macros, QPCBlock *group);
+	void Proj_ParseConfigLink(StringUMap& macros, QPCBlock *group);
+	void Proj_ParseConfigDebug(StringUMap& macros, QPCBlock *group);
+	void Proj_ParseConfigBuildEvent(StringUMap& macros, QPCBlock *event);
 
-	void SetListOption(StringMap& macros, QPCBlock *option, std::vector<std::string> &vec);
+	void SetListOption(StringUMap& macros, QPCBlock *option, std::vector<std::string> &vec);
 	std::string ReplaceProjMacros(const std::string &string);
 	
 	ProjectPass* m_proj = NULL;

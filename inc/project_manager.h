@@ -48,7 +48,7 @@ public:
 	}
 
 	std::string m_name;
-	std::string m_path;
+	fs::path m_path;
 	std::vector<ProjectInfo*> m_deps;
 
 	// the hash system would be called in the constructor to create a path for this file
@@ -89,11 +89,7 @@ class ProjectManager
 public:
 	ProjectManager() {}
 
-	static ProjectManager& GetProjManager()
-	{
-		static ProjectManager manager;
-		return manager;
-	}
+	static ProjectManager& GetProjManager();
 
 	ProjectInfo*                        CreateProject(std::string path);
 	ProjectInfo*                        CreateProject(std::string name, std::string path);
@@ -126,12 +122,18 @@ public:
 	std::vector<ProjectInfo*>           m_buildList;
 
 	// i don't like this at ALL
-	std::unordered_map< Platform, StringMap > m_macros;
+	std::unordered_map< Platform, StringUMap > m_macros;
 };
 
 
-static ProjectManager& GetProjManager()
+// shit
+#if QPC
+static ProjectManager* GetProjManager()
 {
-	return ProjectManager::GetProjManager();
+	return &ProjectManager::GetProjManager();
 }
+#else
+extern ProjectManager* g_projMan;
+ProjectManager* GetProjManager();
+#endif
 

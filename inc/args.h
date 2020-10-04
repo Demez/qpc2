@@ -26,7 +26,7 @@ public:
 	std::vector<std::string> configs;
 	std::vector<Platform> platforms;
 	std::vector<Arch> archs;
-	StringMap macros;
+	StringUMap macros;
 };
 
 
@@ -44,7 +44,7 @@ public:
 
 	const char*                 GetParamValueStr(const char* name, const char* shortHand, const char* defaultValue = "");
 	std::vector<std::string>    GetParamList(const char* name, const char* shortHand, std::vector<std::string> defaultValue = {}, std::vector<std::string> choices = {});
-	StringMap                   GetParamStringMap(const char* name, const char* shortHand);
+	StringUMap                  GetParamStringMap(const char* name, const char* shortHand);
 
 	template <class T>
 	std::vector<T> GetParamList(const char* name, const char* shortHand, EnumParamConvertFunc func, std::vector<T> defaultValue);

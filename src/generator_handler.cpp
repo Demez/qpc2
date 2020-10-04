@@ -81,8 +81,37 @@ void GeneratorHandler::LoadGenerators()
 }
 
 
+bool CheckGeneratorVersion(Module &mod, const char* fileNameC)
+{
+	FuncGetVersion funcGetVersion = (FuncGetVersion)LOAD_FUNC(mod, "GetInterfaceVersion");
+
+	if (!funcGetVersion)
+	{
+		warning("Failed to find GetGeneratorInterface function in \"%s\"", fileNameC);
+		return false;
+	}
+
+	unsigned char intVer = funcGetVersion();
+
+	if (intVer < g_generatorInterfaceVer)
+	{
+		warning("Generator Interface \"%s\" is outdated (Generator is ver %hhu, current ver is %hhu)", fileNameC, intVer, g_generatorInterfaceVer);
+		return false;
+	}
+	else if (intVer > g_generatorInterfaceVer)
+	{
+		warning("Generator Interface \"%s\" is newer than current version (Generator is ver %hhu, current ver is %hhu)", fileNameC, intVer, g_generatorInterfaceVer);
+		return false;
+	}
+
+	return true;
+}
+
+
 void GeneratorHandler::LoadGeneratorModule(fs::path &filePath)
 {
+// temp
+#if QPC
 	std::string filePathStr = filePath.string();
 	const char* filePathC = filePathStr.c_str();
 
@@ -97,24 +126,8 @@ void GeneratorHandler::LoadGeneratorModule(fs::path &filePath)
 		return;
 	}
 
-	FuncGetVersion funcGetVersion = (FuncGetVersion)LOAD_FUNC(mod, "GetInterfaceVersion");
-
-	if (!funcGetVersion)
+	if (!CheckGeneratorVersion(mod, fileNameC))
 	{
-		warning("Failed to find GetGeneratorInterface function in \"%s\"", fileNameC);
-		return;
-	}
-
-	unsigned char intVer = funcGetVersion();
-
-	if (intVer < g_generatorInterfaceVer)
-	{
-		warning("Generator Interface \"%s\" is outdated (Generator is ver %hhu, current ver is %hhu)", fileNameC, intVer, g_generatorInterfaceVer);
-		return;
-	}
-	else if (intVer > g_generatorInterfaceVer)
-	{
-		warning("Generator Interface \"%s\" is newer than current version (Generator is ver %hhu, current ver is %hhu)", fileNameC, intVer, g_generatorInterfaceVer);
 		return;
 	}
 
@@ -125,6 +138,16 @@ void GeneratorHandler::LoadGeneratorModule(fs::path &filePath)
 		warning("Failed to find GetGeneratorInterface function in \"%s\"", fileNameC);
 		return;
 	}
+
+	FuncSetProjManager funcSetProjManager = (FuncSetProjManager)LOAD_FUNC(mod, "SetProjManager");
+
+	if (!funcSetProjManager)
+	{
+		warning("Failed to find SetProjManager function in \"%s\"", fileNameC);
+		return;
+	}
+
+	funcSetProjManager(GetProjManager());
 
 	GeneratorInterface* genInt = funcGetInterface();
 	for (int i = 0; i < genInt->count; i++)
@@ -139,7 +162,7 @@ void GeneratorHandler::LoadGeneratorModule(fs::path &filePath)
 	genInt->fileName = fileNameC;
 
 	m_genIntList.push_back(genInt);
+#endif
 }
-
 
 

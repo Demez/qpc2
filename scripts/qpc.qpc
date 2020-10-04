@@ -17,9 +17,19 @@ config
 		out_name "qpc"
 		config_type "application"
 	}
+	
+	compile
+	{
+		defines
+		{
+			"QPC=1"
+		}
+	}
 
 	link
 	{
+		import_lib "$BUILD_DIR$/qpc$EXT_LIB$"
+		
 		libs
 		{
 			"dl" [$LINUX$]
@@ -31,7 +41,15 @@ config
 
 files
 {
-	"../src/*.cpp"
-	"../src/*.h"
+	folder "Sources"
+	{
+		"../src/*.cpp"
+		"../src/*.h"
+	}
+	
+	folder "Includes"
+	{
+		"$ROOT_DIR$/inc/*.h"
+	}
 }
 

@@ -4,6 +4,13 @@
 #include "project_manager.h"
 
 
+ProjectManager& ProjectManager::GetProjManager()
+{
+	static ProjectManager manager;
+	return manager;
+}
+
+
 ProjectInfo::ProjectInfo(std::string name)
 {
 	m_name = name;

@@ -181,7 +181,7 @@ void GetLongestString(std::vector<std::string> &strVec, std::string &longest)
 	}
 }
 
-void GetLongestString(StringMap &strMap, std::string &longest)
+void GetLongestString(StringUMap &strMap, std::string &longest)
 {
 	longest = "";
 	for (auto const&[key, value]: strMap)
@@ -198,7 +198,7 @@ std::string GetLongestString(std::vector<std::string> &strVec)
 	return longest;
 }
 
-std::string GetLongestString(StringMap &strMap)
+std::string GetLongestString(StringUMap &strMap)
 {
 	std::string longest;
 	GetLongestString(strMap, longest);
@@ -331,7 +331,7 @@ Arch StrToArch(std::string &arch)
 }
 
 
-void SetPlatformMacros(StringMap &macros, Platform platform)
+void SetPlatformMacros(StringUMap &macros, Platform platform)
 {
 	macros["WINDOWS"] = platform == Platform::WINDOWS ? "1" : "0";
 	macros["LINUX"] = platform == Platform::LINUX ? "1" : "0";
@@ -339,7 +339,7 @@ void SetPlatformMacros(StringMap &macros, Platform platform)
 }
 
 
-void SetArchMacros(StringMap &macros, Arch arch)
+void SetArchMacros(StringUMap &macros, Arch arch)
 {
 	macros["AMD64"] = arch == Arch::AMD64 ? "1" : "0";
 	macros["I386"] = arch == Arch::I386 ? "1" : "0";

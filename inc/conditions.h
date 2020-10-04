@@ -2,8 +2,8 @@
 
 #include "util.h"
 
-std::string ReplaceMacros(StringMap &macros, const std::string &string);
-bool SolveCondition(StringMap &macros, std::string condition);
+std::string ReplaceMacros(StringUMap &macros, const std::string &string);
+bool SolveCondition(StringUMap &macros, std::string condition);
 
 
 

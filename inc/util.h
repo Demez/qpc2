@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <string>
 #include <unordered_map>
+#include <map>
 #include <initializer_list>
 #include <filesystem>
 
@@ -16,7 +17,8 @@ extern std::vector<std::string> g_extsSource;
 extern std::vector<std::string> g_extsHeader;
 
 // only so i don't need to type all this out so many times
-typedef std::unordered_map<std::string, std::string> StringMap;
+typedef std::unordered_map<std::string, std::string> StringUMap;
+typedef std::map<std::string, std::string> StringMap;
 
 
 template <class T>
@@ -89,6 +91,19 @@ inline void str_lower(std::string &string)
 }
 
 
+inline std::string RemoveFileExt(std::string &path)
+{
+	fs::path fspath = path;
+
+	if (fspath.has_extension())
+	{
+		return path.substr(0, path.length() - fspath.extension().string().length()); 
+	}
+
+	return path;
+}
+
+
 enum class Arch
 {
 	INVALID = 0,
@@ -123,8 +138,8 @@ Arch                StrToArch(std::string &plat);
 std::string         PlatformToStr(Platform platform);
 std::string         ArchToStr(Arch arch);
 
-void                SetPlatformMacros(StringMap &macros, Platform platform);
-void                SetArchMacros(StringMap &macros, Arch arch);
+void                SetPlatformMacros(StringUMap &macros, Platform platform);
+void                SetArchMacros(StringUMap &macros, Arch arch);
 
 std::string         GetCurrentDir();
 int                 ChangeDir(std::string &path);
@@ -135,9 +150,9 @@ bool                ItemExists(std::string &path);
 
 void                ReplaceString(std::string& str, const std::string& from, const std::string& to);
 void                GetLongestString(std::vector<std::string> &strVec, std::string &longest);
-void                GetLongestString(StringMap &strMap, std::string &longest);
+void                GetLongestString(StringUMap &strMap, std::string &longest);
 std::string         GetLongestString(std::vector<std::string> &strVec);
-std::string         GetLongestString(StringMap &strMap);
+std::string         GetLongestString(StringUMap &strMap);
 
 bool                CheckExtSource(std::string& ext);
 bool                CheckExtHeader(std::string& ext);

@@ -6,7 +6,7 @@
 #include "conditions.h"
 
 
-void ProjectBuilder::SetListOption(StringMap& macros, QPCBlock *option, std::vector<std::string> &vec)
+void ProjectBuilder::SetListOption(StringUMap& macros, QPCBlock *option, std::vector<std::string> &vec)
 {
 	std::vector<std::string> values;
 	bool removing = false;
@@ -65,19 +65,19 @@ void ProjectBuilder::ParseDefFile(std::string &path)
 
 	QPCBlockRoot* qpcRoot = ReadFile(path);
 
-	ProjectManager& manager = GetProjManager();
+	ProjectManager* manager = GetProjManager();
 
 	for (Platform platform: GetArgPlatforms())
 	{
-		SetPlatformMacros(manager.m_macros[platform], platform);
+		SetPlatformMacros(manager->m_macros[platform], platform);
 
 		for (auto const& [key, val]: GetArgs().macros)
-			manager.m_macros[platform][key] = val;
+			manager->m_macros[platform][key] = val;
 
 		ParseDefFileRecurse(qpcRoot, platform);
 	}
 
-	manager.SetupGroupIncludes();
+	manager->SetupGroupIncludes();
 
 	delete qpcRoot;
 }
@@ -85,11 +85,11 @@ void ProjectBuilder::ParseDefFile(std::string &path)
 
 void ProjectBuilder::ParseDefFileRecurse(QPCBlockRoot *root, Platform plat)
 {
-	ProjectManager& manager = GetProjManager();
+	ProjectManager* manager = GetProjManager();
 
-	for (QPCBlock* block: root->GetItemsCond(manager.m_macros[plat]))
+	for (QPCBlock* block: root->GetItemsCond(manager->m_macros[plat]))
 	{
-		std::string key = ReplaceMacros(manager.m_macros[plat], block->m_key);
+		std::string key = ReplaceMacros(manager->m_macros[plat], block->m_key);
 
 		if (key == "macro")
 			Manager_AddMacro(block, plat);
@@ -124,38 +124,37 @@ void ProjectBuilder::ParseDefFileRecurse(QPCBlockRoot *root, Platform plat)
 
 inline void ProjectBuilder::Manager_AddMacro(QPCBlock *block, Platform plat)
 {
-	GetProjManager().m_macros[plat][block->m_key] = block->m_values[0];
+	GetProjManager()->m_macros[plat][block->m_key] = block->m_values[0];
 }
 
 void ProjectBuilder::Manager_AddConfigs(QPCBlock *block, Platform plat)
 {
-	ProjectManager& manager = GetProjManager();
-	for (QPCBlock* cfg: block->GetItemsCond(manager.m_macros[plat]))
+	for (QPCBlock* cfg: block->GetItemsCond(GetProjManager()->m_macros[plat]))
 	{
-		manager.AddConfig(cfg->m_key);
+		GetProjManager()->AddConfig(cfg->m_key);
 	}
 }
 
 
 void ProjectBuilder::Manager_AddProject(QPCBlock *block, Platform plat)
 {
-	ProjectInfo* project = GetProjManager().CreateProject(block->GetValue(0), block->GetValue(1));
+	ProjectInfo* project = GetProjManager()->CreateProject(block->GetValue(0), block->GetValue(1));
 	if (!project)
 		return;
 
 	project->AddPlatform(plat);
-	GetProjManager().AddProject(project);
+	GetProjManager()->AddProject(project);
 }
 
 
 void ProjectBuilder::Manager_AddGroup(QPCBlock *block, Platform plat)
 {
-	ProjectGroup* group = GetProjManager().CreateGroup(block->GetValue(0));
+	ProjectGroup* group = GetProjManager()->CreateGroup(block->GetValue(0));
 	if (!group)
 		return;
 
 	group->AddPlatform(plat);
-	GetProjManager().AddGroup(group);
+	GetProjManager()->AddGroup(group);
 
 	// check if we want to add this to other groups?
 	// item->m_values.size() > 1
@@ -167,9 +166,9 @@ void ProjectBuilder::Manager_AddGroup(QPCBlock *block, Platform plat)
 
 void ProjectBuilder::Manager_ParseGroup(QPCBlock *block, Platform plat, ProjectGroup* group, fs::path &folder)
 {
-	ProjectManager& manager = GetProjManager();
+	ProjectManager* manager = GetProjManager();
 
-	for (QPCBlock* item: block->GetItemsCond(manager.m_macros[plat]))
+	for (QPCBlock* item: block->GetItemsCond(manager->m_macros[plat]))
 	{
 		if (item->m_key == "folder")
 		{
@@ -197,21 +196,21 @@ void ProjectBuilder::Manager_ParseGroup(QPCBlock *block, Platform plat, ProjectG
 
 			for (std::string otherName: item->m_values)
 			{
-				otherName = ReplaceMacros(manager.m_macros[plat], otherName);
+				otherName = ReplaceMacros(manager->m_macros[plat], otherName);
 
-				ProjectGroup* other = manager.GetGroup(otherName);
+				ProjectGroup* other = manager->GetGroup(otherName);
 
 				if (!other)
 				{
-					other = manager.CreateGroup(otherName);
-					manager.AddGroup(other);
+					other = manager->CreateGroup(otherName);
+					manager->AddGroup(other);
 				}
 
 				group->m_otherGroups[other] = folder.string();
 			}
 		}
 
-		ProjectInfo* project = manager.GetProject(item->m_key);
+		ProjectInfo* project = manager->GetProject(item->m_key);
 
 		if (!project)
 		{
@@ -233,15 +232,15 @@ void ProjectBuilder::Manager_ParseGroup(QPCBlock *block, Platform plat, ProjectG
 				path = item->m_key;
 			}
 
-			project = manager.CreateProject(name, path);
+			project = manager->CreateProject(name, path);
 			if (!project)
 				continue;
 
 			project->AddPlatform(plat);
-			manager.AddProject(project);
+			manager->AddProject(project);
 		}
 
-		manager.AddProjToGroup(group, project, folder.string());
+		manager->AddProjToGroup(group, project, folder.string());
 	}
 }
 
@@ -249,15 +248,13 @@ void ProjectBuilder::Manager_ParseGroup(QPCBlock *block, Platform plat, ProjectG
 // ==========================================================================
 
 
-ProjectContainer* ProjectBuilder::ParseProject(std::string &path)
+ProjectContainer* ProjectBuilder::ParseProject(ProjectInfo* info)
 {
-	QPCBlockRoot* qpcRoot = ReadFile(path);
+	QPCBlockRoot* qpcRoot = ReadFile(info->m_path.string());
 
-	fs::path fsPath = path;
-	ProjectContainer* projContainer = new ProjectContainer(fsPath);
+	ProjectContainer* projContainer = new ProjectContainer(info);
 
-	std::string prevDir = GetCurrentDir();
-	std::string dir = fsPath.parent_path().string();
+	std::string dir = info->m_path.parent_path().string();
 	ChangeDir(dir);
 
 	for (ProjectPass* pass: projContainer->m_passes)
@@ -266,7 +263,6 @@ ProjectContainer* ProjectBuilder::ParseProject(std::string &path)
 		ParseProjRecurse(qpcRoot);
 	}
 
-	ChangeDir(prevDir);
 	delete qpcRoot;
 
 	return projContainer;
@@ -464,7 +460,7 @@ void ProjectBuilder::Proj_SetScriptMacros(fs::path filePath)
 }
 
 
-void ProjectBuilder::Proj_ParseConfigGeneral(StringMap& macros, QPCBlock *group)
+void ProjectBuilder::Proj_ParseConfigGeneral(StringUMap& macros, QPCBlock *group)
 {
 	for (QPCBlock* option: group->GetItemsCond(m_proj->m_macros))
 	{
@@ -531,7 +527,7 @@ void ProjectBuilder::Proj_ParseConfigGeneral(StringMap& macros, QPCBlock *group)
 }
 
 
-void ProjectBuilder::Proj_ParseConfigCompile(StringMap& macros, QPCBlock *group)
+void ProjectBuilder::Proj_ParseConfigCompile(StringUMap& macros, QPCBlock *group)
 {
 	std::string key;
 
@@ -601,7 +597,7 @@ void ProjectBuilder::Proj_ParseConfigCompile(StringMap& macros, QPCBlock *group)
 }
 
 
-void ProjectBuilder::Proj_ParseConfigLink(StringMap& macros, QPCBlock *group)
+void ProjectBuilder::Proj_ParseConfigLink(StringUMap& macros, QPCBlock *group)
 {
 	std::string key;
 
@@ -683,7 +679,7 @@ void ProjectBuilder::Proj_ParseConfigLink(StringMap& macros, QPCBlock *group)
 }
 
 
-void ProjectBuilder::Proj_ParseConfigDebug(StringMap& macros, QPCBlock *group)
+void ProjectBuilder::Proj_ParseConfigDebug(StringUMap& macros, QPCBlock *group)
 {
 	std::string key;
 
@@ -719,7 +715,7 @@ void ProjectBuilder::Proj_ParseConfigDebug(StringMap& macros, QPCBlock *group)
 }
 
 
-void ProjectBuilder::Proj_ParseConfigBuildEvent(StringMap& macros, QPCBlock *event)
+void ProjectBuilder::Proj_ParseConfigBuildEvent(StringUMap& macros, QPCBlock *event)
 {
 
 }

@@ -27,6 +27,42 @@ const std::vector<std::string> g_standard =
 	"C89",
 };
 
+const std::vector<std::string> g_standardNum = 
+{
+	"20",
+	"17",
+	"17",
+	"11",
+	"03",
+	"98",
+
+	"11",
+	"99",
+	"95",
+	"90",
+	"89",
+};
+
+
+ProjError VerifyEnum(int &value, int max)
+{
+	if (value >= max || value < 0)
+	{
+		value = 0;
+		return ProjError::INVALID_OPTION;
+	}
+
+	return ProjError::NONE;
+}
+
+
+std::string StandardToNum(Standard standard)
+{
+	int iValue = (int)standard;
+	VerifyEnum(iValue, (int)Standard::COUNT);
+	return g_standardNum[iValue];
+}
+
 
 ProjError ConvertBoolOption(bool &prevValue, std::string value)
 {
@@ -42,18 +78,6 @@ ProjError ConvertBoolOption(bool &prevValue, std::string value)
 	}
 	else
 	{
-		return ProjError::INVALID_OPTION;
-	}
-
-	return ProjError::NONE;
-}
-
-
-ProjError VerifyEnum(int &value, int max)
-{
-	if (value >= max || value < 0)
-	{
-		value = 0;
 		return ProjError::INVALID_OPTION;
 	}
 

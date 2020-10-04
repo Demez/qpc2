@@ -6,9 +6,9 @@ std::regex g_condOperators("(\\(|\\)|\\|\\||\\&\\&|>=|<=|==|!=|>|<)");
 
 
 // finds macros that could potentially work in this string
-StringMap GetPotentialMacros(StringMap &macros, const std::string &string)
+StringUMap GetPotentialMacros(StringUMap &macros, const std::string &string)
 {
-	StringMap potentialMacros;
+	StringUMap potentialMacros;
 	for (auto const&[key, value]: macros)
 	{
 		std::string macro = "$" + key + "$";
@@ -23,14 +23,14 @@ StringMap GetPotentialMacros(StringMap &macros, const std::string &string)
 
 
 // why tf did i put this in conditions.cpp
-std::string ReplaceMacros(StringMap &macros, const std::string &string)
+std::string ReplaceMacros(StringUMap &macros, const std::string &string)
 {
 	if (string.find("$") == std::string::npos)
 		return string;
 
 	std::string newString = string;
 
-	StringMap potentialMacros = GetPotentialMacros(macros, string);
+	StringUMap potentialMacros = GetPotentialMacros(macros, string);
 
 	while (potentialMacros.size() > 0)
 	{
@@ -48,7 +48,7 @@ std::string ReplaceMacros(StringMap &macros, const std::string &string)
 }
 
 
-void ReplaceConditionValue(StringMap &macros, std::string &string)
+void ReplaceConditionValue(StringUMap &macros, std::string &string)
 {
 	bool notOperator = (str_count(string, "!") % 2);
 
@@ -57,7 +57,7 @@ void ReplaceConditionValue(StringMap &macros, std::string &string)
 	{
 		std::string item = string.substr(1, string.length() - 2);
 
-		StringMap::iterator pos = macros.find(item);
+		StringUMap::iterator pos = macros.find(item);
 		if (pos != macros.end())
 		{
 			string = notOperator ? "0": macros[item];
@@ -123,7 +123,7 @@ int StrToIntCond(std::string& cond)
 }
 
 
-void SolveSingleCondition(StringMap &macros, std::vector<std::string> &cond)
+void SolveSingleCondition(StringUMap &macros, std::vector<std::string> &cond)
 {
 	size_t pos = 1;
 	int result = 0;
@@ -179,7 +179,7 @@ size_t GetNestedCondEndPos(std::string cond)
 }
 
 
-bool SolveCondition(StringMap &macros, std::string cond)
+bool SolveCondition(StringUMap &macros, std::string cond)
 {
 	if (cond.empty())
 		return true;

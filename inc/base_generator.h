@@ -22,6 +22,7 @@ struct GeneratorInterface
 
 typedef unsigned char (*FuncGetVersion)();
 typedef GeneratorInterface* (*FuncGetInterface)();
+typedef void (*FuncSetProjManager)(void*);  // really really stupid
 
 
 class BaseGenerator: public PlatArchItem
@@ -63,6 +64,18 @@ public:
 #endif
 
 
+// Sad hacky macro that I NEED TO REMOVE AND DO PROPERLY EVENTUALLY
+#define DECLARE_PROJ_MAN_HACK() \
+	ProjectManager* g_projMan; \
+	extern "C" DLL_EXPORT void SetProjManager(ProjectManager& projMan) \
+	{ \
+		g_projMan = &projMan; \
+	} \
+	ProjectManager* GetProjManager() \
+	{ \
+		return g_projMan; \
+	}
+
 // Convienence macros
 #define DECLARE_INTERFACE_VERSION() \
 	extern "C" DLL_EXPORT unsigned char GetInterfaceVersion() \
@@ -88,6 +101,7 @@ public:
 
 
 #define DECLARE_SINGLE_GENERATOR(genClass) \
+	DECLARE_PROJ_MAN_HACK() \
 	DECLARE_INTERFACE_VERSION() \
 	DECLARE_GENERATOR_INTERFACE(1) \
 	ADD_GENERATOR(genClass) \

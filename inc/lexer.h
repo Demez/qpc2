@@ -24,7 +24,7 @@ public:
 		return m_valid;
 	}
 
-	inline bool SolveCondition(StringMap &macros)
+	inline bool SolveCondition(StringUMap &macros)
 	{
 		return ::SolveCondition(macros, m_condition);
 	}
@@ -39,7 +39,7 @@ public:
 
 	std::vector<std::string>        GetList();
 	std::string                     GetValue(int index = 0);
-	std::vector<QPCBlock*>          GetItemsCond(StringMap &macros);
+	std::vector<QPCBlock*>          GetItemsCond(StringUMap &macros);
 
 	virtual const char*             GetFilePath();
 	virtual std::string             GetFormattedInfo();
@@ -69,7 +69,7 @@ public:
 	std::string m_filePath;
 	std::string m_file;
 
-	QPCLexer(std::string &path);
+	QPCLexer(const std::string &path);
 	~QPCLexer();
 
 	std::string NextKey();
@@ -122,6 +122,6 @@ private:
 };
 
 
-QPCBlockRoot* ReadFile(std::string &filePath);
+QPCBlockRoot* ReadFile(const std::string &filePath);
 
 

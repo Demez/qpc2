@@ -107,14 +107,14 @@ std::vector<T> ArgParser::GetParamList(const char* name, const char* shortHand, 
 }
 
 
-StringMap ArgParser::GetParamStringMap(const char* name, const char* shortHand)
+StringUMap ArgParser::GetParamStringMap(const char* name, const char* shortHand)
 {
     for (int i = 0; i < argc; i++)
     {
         if (!ArgEqual(name, shortHand, argv[i]))
             continue;
 
-        StringMap paramMap;
+        StringUMap paramMap;
 
         for (i++; i < argc; i++)
         {
@@ -170,16 +170,19 @@ void ArgParser::ParseArgs(int argc, const char** argv)
 
     Args& args = GetArgs();
 
-	args.rootDir = GetParamValueStr("--rootdir", "-R", GetCurrentDir().c_str());
-	args.baseFile = GetParamValueStr("--basefile", "-b");
-	args.masterFile = GetParamValueStr("--masterfile", "-m");
+	args.rootDir = GetParamValueStr("--root-dir", "-R", GetCurrentDir().c_str());
+	args.baseFile = GetParamValueStr("--base-file", "-b");
+	args.masterFile = GetParamValueStr("--master-file", "-m");
 
 	args.verbose = CheckParam("--verbose", "-v");
 	args.force = CheckParam("--force", "-f");
-	args.forceMaster = CheckParam("--forcemaster", "-fm");
-	args.hideWarnings = CheckParam("--hidewarnings", "-w");
+	args.forceMaster = CheckParam("--force-master", "-fm");
+	args.hideWarnings = CheckParam("--hide-warnings", "-w");
 
     args.add = GetParamList("--add", "-a");
+    args.addDepend = GetParamList("--add-depend", "-ad");
+    args.addTree = GetParamList("--add-tree", "-at");
+
     args.remove = GetParamList("--remove", "-r");
     args.configs = GetParamList("--configs", "-c", {"Debug", "Release"});
     args.generators = GetParamList("--generators", "-g",
