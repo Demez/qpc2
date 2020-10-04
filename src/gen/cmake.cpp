@@ -12,24 +12,9 @@ inline std::string StrEqual(std::string str1, std::string str2)
 }
 
 
-std::string QuoteAbsPath(std::string &path)
+std::string QuoteAbsPath(std::string path)
 {
 	return "\"" + GetCurrentDir() + "/" + path + "\"";
-}
-
-
-std::vector<std::string> AbsPathVec(std::vector<std::string> &vec)
-{
-	std::vector<std::string> result;
-	bool first = true;
-
-	for (std::string item: vec)
-	{
-		ReplaceString(item, "\\", "/");
-		result.push_back(QuoteAbsPath(item));
-	}
-
-	return result;
 }
 
 
@@ -72,7 +57,7 @@ std::string JoinStringAdv(std::vector<std::string> &vec, const char* startChar =
 }
 
 
-std::string JoinStringPath(std::vector<std::string> &vec, const char* joinChar = " ")
+std::string JoinStringPath(std::vector<std::string> vec, const char* joinChar = " ")
 {
 	std::string result;
 	bool first = true;
@@ -98,25 +83,6 @@ std::string JoinStringPath(std::vector<std::string> &vec, const char* joinChar =
 
 std::string GenOption(size_t amount, std::string target, ...)
 {
-	std::string option = target + "( ";
-
-	va_list args;
-	va_start(args, target);
-	{
-		for (size_t i = 0; i < amount; i++)
-		{
-			std::string nextArg = va_arg(args, std::string);
-			option += " " + nextArg;
-		}
-	}
-	va_end(args);
-
-	return option + " )\n";
-}
-
-
-std::string GenListOption(size_t amount, std::string target, ...)
-{
 	std::string option = "\t" + target + "(";
 
 	va_list args;
@@ -124,26 +90,7 @@ std::string GenListOption(size_t amount, std::string target, ...)
 	{
 		for (size_t i = 0; i < amount; i++)
 		{
-			std::string nextArg = va_arg(args, std::string);
-			option += "\n\t\t" + nextArg;
-		}
-	}
-	va_end(args);
-
-	return option + "\n\t)\n\n";
-}
-
-
-std::string GenTargetOption(size_t amount, std::string target, ...)
-{
-	std::string option = "\ttarget_" + target + "(\n\t\t";
-
-	va_list args;
-	va_start(args, target);
-	{
-		for (size_t i = 0; i < amount; i++)
-		{
-			std::string nextArg = va_arg(args, std::string);
+			std::string nextArg = va_arg(args, const char*);
 			option += "\n\t\t" + nextArg;
 		}
 	}
@@ -249,7 +196,9 @@ public:
 	void HandleIncLibDirs(std::string &cmakeLists, std::string &projName, ProjectPass* proj, std::vector<std::string> &vec, std::string type)
 	{
 		if (!vec.empty())
-			cmakeLists += GenListOption( 2, "target_" + type, projName + " PRIVATE", JoinStringPath(vec, "\n\t\t") );
+		{
+			cmakeLists += GenOption( 2, "target_" + type, (projName + " PRIVATE").c_str(), JoinStringPath(vec, "\n\t\t").c_str() );
+		}
 	}
 
 	void HandleDependencies(std::string &cmakeLists, ProjectPass* proj, std::string &projName)
@@ -274,7 +223,7 @@ public:
 
 		if (!deps.empty())
 		{
-			cmakeLists += GenListOption( 2, "add_dependencies", projName, JoinVecToString(deps, "\n\t\t") );
+			cmakeLists += GenOption( 2, "add_dependencies", projName.c_str(), JoinVecToString(deps, "\n\t\t").c_str() );
 		}
 	}
 
@@ -307,7 +256,7 @@ public:
 
 		if (!libs.empty())
 		{
-			cmakeLists += GenListOption( 2, "target_link_libraries", projName, JoinVecToString(libs, "\n\t\t") );
+			cmakeLists += GenOption( 2, "target_link_libraries", projName.c_str(), JoinVecToString(libs, "\n\t\t").c_str() );
 		}
 	}
 
@@ -338,15 +287,15 @@ public:
 
 		cmakeLists += "\n";
 
-		cmakeLists += GenListOption( 2, "set", projName + "_SRC_FILES", JoinStringPath(proj->GetSourceFileList(), "\n\t\t") );
-		cmakeLists += GenListOption( 2, "set", projName + "_INC_FILES", JoinStringPath(proj->GetHeaderFileList(), "\n\t\t") );
+		cmakeLists += GenOption( 2, "set", (projName + "_SRC_FILES").c_str(), JoinStringPath(proj->GetSourceFileList(), "\n\t\t").c_str() );
+		cmakeLists += GenOption( 2, "set", (projName + "_INC_FILES").c_str(), JoinStringPath(proj->GetHeaderFileList(), "\n\t\t").c_str() );
 
-		cmakeLists += GenListOption(
+		cmakeLists += GenOption(
 			3,
 			target,
-			projName + targetType,
-			"${" + projName + "_SRC_FILES}",
-			"${" + projName + "_INC_FILES}"
+			(projName + targetType).c_str(),
+			("${" + projName + "_SRC_FILES}").c_str(),
+			("${" + projName + "_INC_FILES}").c_str()
 		);
 
 		std::string lang = proj->cfg.general.lang == Language::CPP ? "CXX" : "C";
@@ -392,7 +341,7 @@ public:
 			targetPropsStr += k + " " + v;
 		}
 
-		cmakeLists += GenListOption( 2, "set_target_properties", projName + " PROPERTIES", targetPropsStr );
+		cmakeLists += GenOption( 2, "set_target_properties", (projName + " PROPERTIES").c_str(), targetPropsStr.c_str() );
 
 		HandleDependencies(cmakeLists, proj, projName);
 
@@ -403,12 +352,12 @@ public:
 
 		if (!proj->cfg.compile.defines.empty())
 		{
-			cmakeLists += GenListOption( 2, "target_compile_definitions", projName + " PRIVATE", JoinStringAdv(proj->cfg.compile.defines, "-D", "\n\t\t") );
+			cmakeLists += GenOption( 2, "target_compile_definitions", (projName + " PRIVATE").c_str(), JoinStringAdv(proj->cfg.compile.defines, "-D", "\n\t\t").c_str() );
 		}
 
 		if (!proj->cfg.compile.options.empty())
 		{
-			cmakeLists += GenListOption( 2, "target_compile_options", projName + " PRIVATE", JoinStringAdv(proj->cfg.compile.options, "", "\n\t\t") );
+			cmakeLists += GenOption( 2, "target_compile_options", (projName + " PRIVATE").c_str(), JoinStringAdv(proj->cfg.compile.options, "", "\n\t\t").c_str() );
 		}
 
 		std::vector<std::string> linkOptions;
@@ -438,7 +387,7 @@ public:
 
 		if (!linkOptions.empty())
 		{
-			cmakeLists += GenListOption( 2, "target_link_options", projName + " PRIVATE", JoinStringAdv(linkOptions, "", "\n\t\t") );
+			cmakeLists += GenOption( 2, "target_link_options", (projName + " PRIVATE").c_str(), JoinStringAdv(linkOptions, "", "\n\t\t").c_str() );
 		}
 
 		return cmakeLists;
