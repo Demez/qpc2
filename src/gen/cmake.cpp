@@ -315,16 +315,24 @@ public:
 			{lang + "_STANDARD",            "\"" + StandardToNum(proj->cfg.general.standard) + "\""},
 			// {lang + "_STANDARD_REQUIRED",   "\"YES\""},
 			{cmakeOutputDir,                "\"" + outputDir + "\""},
+			{cmakeOutputDir + "_RELEASE",   "\"" + outputDir + "\""},
+			{cmakeOutputDir + "_DEBUG",     "\"" + outputDir + "\""},
 		};
 
 		if (!proj->cfg.link.impLib.empty())
 		{
 			fs::path fsImpLibDir = proj->cfg.link.impLib;
-			targetProps["ARCHIVE_OUTPUT_DIRECTORY"] = QuoteAbsPath(fsImpLibDir.parent_path().string());
+			std::string archiveOutputDir = QuoteAbsPath(fsImpLibDir.parent_path().string());
+			targetProps["ARCHIVE_OUTPUT_DIRECTORY"] = archiveOutputDir;
+			targetProps["ARCHIVE_OUTPUT_DIRECTORY_RELEASE"] = archiveOutputDir;
+			targetProps["ARCHIVE_OUTPUT_DIRECTORY_DEBUG"] = archiveOutputDir;
 		}
 		else if (proj->cfg.general.configType != ConfigType::STATIC_LIB)
 		{
-			targetProps["ARCHIVE_OUTPUT_DIRECTORY"] = QuoteAbsPath(proj->cfg.general.buildDir);
+			std::string archiveOutputDir = QuoteAbsPath(proj->cfg.general.buildDir);
+			targetProps["ARCHIVE_OUTPUT_DIRECTORY"] = archiveOutputDir;
+			targetProps["ARCHIVE_OUTPUT_DIRECTORY_RELEASE"] = archiveOutputDir;
+			targetProps["ARCHIVE_OUTPUT_DIRECTORY_DEBUG"] = archiveOutputDir;
 		}
 
 		std::string targetPropsStr;
