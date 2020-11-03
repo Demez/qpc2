@@ -140,19 +140,8 @@ public:
 		{
 			std::ifstream fileStream("CMakeLists.txt", std::ifstream::in);
 
-			fileStream.seekg(0, fileStream.end);
-			size_t fileLen = fileStream.tellg();
-			fileStream.seekg(0, fileStream.beg);
-
-			char* buf = new char[fileLen];
-			memset(buf, 0, fileLen);
-
-			fileStream.read(buf, fileLen);
-			fileStream.close();
-
-			mainCMakeLists += buf;
-
-			delete[] buf;
+            mainCMakeLists.assign(std::istream_iterator<char>(fileStream),
+                                  std::istream_iterator<char>());
 		}
 
 		for (size_t i = 0; i < passes.size(); i++)
