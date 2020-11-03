@@ -139,7 +139,7 @@ public:
 		else if (fs::is_regular_file("CMakeLists.txt"))
 		{
 			std::ifstream fileStream("CMakeLists.txt", std::ifstream::in);
-
+            
             std::string previousCMakeLists(std::istream_iterator<char>(fileStream),
                                            std::istream_iterator<char>());
             mainCMakeLists += previousCMakeLists;
