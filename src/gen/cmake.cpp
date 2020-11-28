@@ -124,7 +124,7 @@ public:
 
 	void CreateProject(ProjectContainer* proj)
 	{
-		// TODO: this will be changed later
+		// TODO: this will be changed later, so we only get the ones set for this generator
 		std::vector<ProjectPass*> passes = proj->m_passes;
 
 		printf("Generating CMakeLists.txt for project");
@@ -139,10 +139,9 @@ public:
 		else if (fs::is_regular_file("CMakeLists.txt"))
 		{
 			std::ifstream fileStream("CMakeLists.txt", std::ifstream::in);
-            
-            std::string previousCMakeLists(std::istream_iterator<char>(fileStream),
-                                           std::istream_iterator<char>());
-            mainCMakeLists += previousCMakeLists;
+
+			mainCMakeLists.assign(std::istreambuf_iterator<char>(fileStream),
+								  std::istreambuf_iterator<char>());
 		}
 
 		for (size_t i = 0; i < passes.size(); i++)
@@ -159,7 +158,7 @@ public:
 				StrEqual("QPC_PLATFORM", PlatformToStr(pass->m_platform)) + " AND " +
 				StrEqual("QPC_ARCH", ArchToStr(pass->m_arch)) + " )\n";
 
-			mainCMakeLists += HandleProjectPass(proj->info, pass);
+			HandleProjectPass(mainCMakeLists, proj->info, pass);
 		}
 
 		mainCMakeLists += "endif()\n\n";
@@ -250,10 +249,8 @@ public:
 		}
 	}
 
-	std::string HandleProjectPass(ProjectInfo* info, ProjectPass* proj)
+	int HandleProjectPass(std::string& cmakeLists, ProjectInfo* info, ProjectPass* proj)
 	{
-		std::string cmakeLists = "";
-
 		std::string projName = proj->m_macros["PROJECT_SCRIPT_NAME"];
 		str_upper(projName);
 
@@ -388,7 +385,7 @@ public:
 			cmakeLists += GenOption( 2, "target_link_options", (projName + " PRIVATE").c_str(), JoinStringAdv(linkOptions, "", "\n\t\t").c_str() );
 		}
 
-		return cmakeLists;
+		return 0;
 	}
 };
 
