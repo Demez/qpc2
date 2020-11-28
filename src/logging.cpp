@@ -7,7 +7,7 @@ int g_warningCount = 0;
 // this will not work on first use
 const char* FormatStringVA(const char* str, va_list args)
 {
-	char* finalStr = "";
+	const char* finalStr = "";
 
 	/*va_start(args, str);
 	{

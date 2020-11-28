@@ -12,6 +12,9 @@ config
 		{
 			"/Od" "/MTd" "/ZI"  [$DEBUG$]
 			"/O2" "/MT"         [$RELEASE$]
+			
+			// enable standards conformance
+			"/permissive-"
 		}
 	}
 }
