@@ -14,6 +14,7 @@
 
 #ifdef _WIN32
 	#include <libloaderapi.h>
+	#include <windows.h>  // needed for LoadLibraryA
 
 	#define LOAD_LIBRARY(path) LoadLibraryA(path)
 	#define LOAD_FUNC GetProcAddress
