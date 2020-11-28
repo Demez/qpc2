@@ -4,15 +4,20 @@
 #include <sys/stat.h>
 
 #ifdef _WIN32
-#include <direct.h>
-#include <windows.h>
-#include <io.h>
-#elif __linux__
-#include <stdlib.h>
-#include <unistd.h>
+	#include <direct.h>
+	#include <sysinfoapi.h>
+	#include <io.h>
 
-// windows-specific mkdir() is used
-#define mkdir(f) mkdir(f, 666)
+	// get rid of the dumb windows posix depreciation warnings
+	#define mkdir _mkdir
+	#define chdir _chdir
+	#define access _access
+#elif __linux__
+	#include <stdlib.h>
+	#include <unistd.h>
+
+	// windows-specific mkdir() is used
+	#define mkdir(f) mkdir(f, 666)
 #endif
 
 
@@ -61,10 +66,12 @@ Arch GetSysArch()
 	{
 		return Arch::AMD64;
 	}
+	#if 0
 	else if (arch == PROCESSOR_ARCHITECTURE_ARM64)
 	{
 		return Arch::ARM64;
 	}
+	#endif
 	else if (arch == PROCESSOR_ARCHITECTURE_ARM)
 	{
 		return Arch::ARM;
@@ -222,7 +229,7 @@ int CreateDir(std::string &path)
 std::string GetCurrentDir()
 {
 #ifdef _WIN32
-	std::string cwd = getcwd( NULL, 0 );
+	std::string cwd = _getcwd( NULL, 0 );
 	ReplaceString(cwd, "\\", "/");
 	return cwd;
 #else
