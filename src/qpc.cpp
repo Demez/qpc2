@@ -234,7 +234,7 @@ auto main(int argc, const char** argv) -> int
 		}
 	}
 
-	printf("\nFinished, Parsed %llu projects\n", manager->m_buildList.size());
+	printf("\nFinished, Parsed %zu projects\n", manager->m_buildList.size());
 
 	return 0;
 }
